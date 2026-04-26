@@ -95,6 +95,6 @@ Das Modul speichert Trends automatisch in Readings. In Kombination mit einem Wet
 Es handelt sich um mein erstes eigens Tool in FHEM, daher bitte ich um Nachsicht, bin aber dankbar für Verbesserungsvorschläge.
 „Software ist nie fertig, sie wird nur aufgegeben.“
 (oft Leonardo da Vinci zugeschrieben, bekannt geworden im Kontext der Softwareentwicklung)
-„Was nicht endet, öffnet den Weg ins Unendliche.“ (Leider habe ich nur nicht unendlich Zeit;-)
+„Was nicht endet, öffnet den Weg ins Unendliche.“ (Leider habe ich nur nicht unendlich Zeit ;-)
 Frank Parussel
 
