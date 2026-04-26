@@ -1,0 +1,7 @@
+# Modul: TibberConnect für FHEM
+# $Id$
+# TibberConnect Modul Update
+# Frank Parussel
+
+FOR fhem-TibberConnect
+UPD 2026-04-26_06:00:00 45678 FHEM/70_TibberConnect.pm
