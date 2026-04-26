@@ -84,7 +84,10 @@ Wichtige Attribute:
 
     attr myTibber chargeDevice Batterie_Ladegerat (Das Gerät für die Preis-Automatik)
     attr myTibber washDevice Waschmaschine (Wird bei Bestpreis eingeschaltet)
-    attr myTibber maxHousePower 8000 (Pausiert das Laden bei >8kW Hauslast)
+    attr myTibber maxHousePower 4200 (Pausiert das Laden bei > 4.2 kW Hauslast)
+
+    (Die Regelung nach § 14a des Energiewirtschaftsgesetzes (EnWG), die seit dem 1. Januar 2024 in Kraft ist, betrifft steuerbare Verbrauchseinrichtungen (wie
+    Wärmepumpen, Wallboxen, Speicher) mit einer Leistung von mehr als 4,2 kW)
 
 Langzeit-Auswertung
 Das Modul speichert Trends automatisch in Readings. In Kombination mit einem Wetter-Device lassen sich so Korrelationen zwischen Sonnenstunden und Strompreis-Stürzen grafisch darstellen.
