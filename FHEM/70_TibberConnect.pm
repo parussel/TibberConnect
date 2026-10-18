@@ -1,8 +1,14 @@
 ##############################################################################
 # 70_TibberConnect.pm
 # ----------------------------------------------------------------------------
+# Independent FHEM community module initiated by Frank Parussel.
+# Contributions and possible future adoption by the FHEM community are welcome.
+# This is currently not an official FHEM module.
+#
+# Copyright (C) 2026 Frank Parussel.
+# Project information: https://153er-netz.de/seiten/entwicklung.html
+#
 # TibberConnect – Stable REST Master Version
-# Franky.P Vision Edition
 #
 # Features:
 # - Stable REST polling

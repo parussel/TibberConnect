@@ -1,5 +1,10 @@
 ##############################################################################
 # 70_TibberLive.pm - optional Tibber Pulse live measurements for FHEM
+# Independent FHEM community module initiated by Frank Parussel.
+# Contributions and possible future adoption by the FHEM community are welcome.
+# This is currently not an official FHEM module.
+#
+# Copyright (C) 2026 Frank Parussel.
 # Project information: https://153er-netz.de/seiten/entwicklung.html
 ##############################################################################
 
