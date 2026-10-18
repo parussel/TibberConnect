@@ -1,0 +1,7 @@
+# Range: week
+# Aggregation: hourly
+set terminal png transparent size <SIZE> crop
+set title 'Tibber price - week'
+set ylabel 'EUR/kWh'
+#FileLog 4:current_price
+plot '<IN>' using 1:2 axes x1y1 title 'current_price' with steps

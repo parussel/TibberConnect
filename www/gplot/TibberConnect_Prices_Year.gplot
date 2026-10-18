@@ -1,0 +1,11 @@
+# Range: year
+# Aggregation: daily
+set terminal png transparent size <SIZE> crop
+set title 'Tibber price - year'
+set ylabel 'EUR/kWh'
+#FileLog 4:priceMinimum
+#FileLog 4:priceAverage
+#FileLog 4:priceMaximum
+plot '<IN>' using 1:2 axes x1y1 title 'priceMinimum' with lines, \
+     '<IN>' using 1:2 axes x1y1 title 'priceAverage' with lines, \
+     '<IN>' using 1:2 axes x1y1 title 'priceMaximum' with lines

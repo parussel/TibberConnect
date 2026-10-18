@@ -1,0 +1,5 @@
+2026-10-18 TibberConnect / TibberLive
+- TibberConnect liest Preise sowie verzögerte Verbrauchs- und Kostendaten ein.
+- Preisfenster, Preisvorschau und Preistendenz sind beratende Readings.
+- TibberLive ergänzt optionale Pulse-Livewerte und Wartungshinweise.
+- Das Update umfasst nur die beiden Module und fünf bereitgestellte GPlot-Dateien.

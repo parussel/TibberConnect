@@ -1,0 +1,7 @@
+# Range: day
+# Aggregation: minute
+set terminal png transparent size <SIZE> crop
+set title 'TibberLive power'
+set ylabel 'W'
+#FileLog 4:power
+plot '<IN>' using 1:2 axes x1y1 title 'power' with lines
