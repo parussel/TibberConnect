@@ -32,11 +32,33 @@ Projektinformationen: [153er-netz.de – Entwicklung](https://153er-netz.de/seit
 
 ### Schnellstart
 
-Kopiere die Dateien wie in [docs/INSTALL.md](docs/INSTALL.md) beschrieben und
-gib anschließend in FHEM ein:
+Der normale Installationsweg erfolgt vollständig über den FHEM-Update-Kanal.
+Die Befehle im FHEM-Kommandoeingabefeld jeweils einzeln eingeben:
 
 ```text
-reload 70_TibberConnect.pm
+update add https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+```text
+update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+Nur wenn die Vorschau die erwarteten Tibber-Modul- und GPlot-Dateien nennt:
+
+```text
+update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+Danach FHEM neu starten:
+
+```text
+shutdown restart
+```
+
+Erst anschließend die Geräte definieren und den persönlichen Token lokal
+speichern:
+
+```text
 define TibberConnect TibberConnect
 set TibberConnect token <PERSOENLICHER_ACCESS_TOKEN>
 set TibberConnect refreshHomes
@@ -51,7 +73,6 @@ set TibberConnect selectHome <HOME_ID_AUS_AVAILABLEHOMES>
 Für Live-Daten erst die optionalen Abhängigkeiten prüfen und dann eingeben:
 
 ```text
-reload 70_TibberLive.pm
 define TibberLive TibberLive TibberConnect
 set TibberLive batteryAgeMonths 0..12
 ```
@@ -112,28 +133,26 @@ Offizielle API-Dokumentation: <https://developer.tibber.com/docs/>
 
 ### FHEM-Update-Kanal
 
-Nach der ersten manuellen Installation kann FHEM spätere Modul- und
-GPlot-Aktualisierungen aus diesem Repository beziehen. Der Update-Kanal enthält
-bewusst nur die beiden Moduldateien und die sechs mitgelieferten GPlot-Dateien.
+Der Schnellstart oben registriert diese Quelle dauerhaft. Sie stellt spätere
+Modul- und GPlot-Aktualisierungen aus diesem Repository bereit. Der
+Update-Kanal enthält bewusst nur die beiden Moduldateien und die sechs
+mitgelieferten GPlot-Dateien.
 Er schreibt niemals Token, Home-ID, Gerätedefinition, FileLog, SVG-Gerät,
 FHEM-Konfiguration oder eine persönliche `99_myUtils.pm`.
 
-Die Befehle im FHEM-Kommandoeingabefeld jeweils einzeln eingeben:
+Für spätere Aktualisierungen die Quelle direkt prüfen:
 
 ```text
-update add https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
 ```
+
+Nur wenn die Vorschau die erwarteten Tibber-Modul-/GPlot-Dateien nennt:
 
 ```text
-update check TibberConnect
+update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
 ```
 
-Die Vorschau prüfen. Nur wenn sie die erwarteten Tibber-Modul-/GPlot-Dateien
-nennt:
-
-```text
-update all TibberConnect
-```
+Danach `shutdown restart` ausführen.
 
 Um keine künftigen Aktualisierungen mehr zu empfangen, ohne installierte Dateien
 zu löschen:
@@ -144,7 +163,7 @@ update delete https://raw.githubusercontent.com/parussel/TibberConnect/main/cont
 
 Vollständiger Umfang, Reload-Schritte und Rückweg stehen in
 [UPDATE_CHANNEL.md](docs/UPDATE_CHANNEL.md). Für eine Erstinstallation die
-manuellen Schritte zu Sicherung, Installation und Prüfung in
+dokumentierten Schritte zu Sicherung, Installation und Prüfung in
 [INSTALL.md](docs/INSTALL.md) befolgen.
 
 ---
@@ -178,11 +197,32 @@ Project information: [153er-netz.de – Development](https://153er-netz.de/seite
 
 ### Quick start
 
-Copy the files as described in [docs/INSTALL.md](docs/INSTALL.md), then enter
-the following in FHEM:
+The normal installation path is fully handled through the FHEM update channel.
+Enter the commands separately in the FHEM command field:
 
 ```text
-reload 70_TibberConnect.pm
+update add https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+```text
+update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+Only when the preview lists the expected Tibber module and GPlot files:
+
+```text
+update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+Then restart FHEM:
+
+```text
+shutdown restart
+```
+
+Only then define the devices and store the personal token locally:
+
+```text
 define TibberConnect TibberConnect
 set TibberConnect token <YOUR_PERSONAL_ACCESS_TOKEN>
 set TibberConnect refreshHomes
@@ -197,7 +237,6 @@ set TibberConnect selectHome <HOME_ID_FROM_AVAILABLEHOMES>
 For live data, first complete the optional dependency inventory and then use:
 
 ```text
-reload 70_TibberLive.pm
 define TibberLive TibberLive TibberConnect
 set TibberLive batteryAgeMonths 0..12
 ```
@@ -253,27 +292,25 @@ Official API documentation: <https://developer.tibber.com/docs/>
 
 ### FHEM update channel
 
-After the initial manual installation, FHEM can receive later module and GPlot
-updates from this repository. The update channel deliberately contains only the
-two module files and the six supplied GPlot files. It never writes a token,
-Home ID, device definition, FileLog, SVG device, FHEM configuration or personal
-`99_myUtils.pm`.
+The quick start above registers this source persistently. It provides later
+module and GPlot updates from this repository. The update channel deliberately
+contains only the two module files and the six supplied GPlot files. It never
+writes a token, Home ID, device definition, FileLog, SVG device, FHEM
+configuration or personal `99_myUtils.pm`.
 
-Enter the commands separately in the FHEM command field:
-
-```text
-update add https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
-```
+For later updates, check the source directly:
 
 ```text
-update check TibberConnect
+update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
 ```
 
-Inspect the preview. Only when it lists the expected Tibber module/GPlot files:
+Only when the preview lists the expected Tibber module/GPlot files:
 
 ```text
-update all TibberConnect
+update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
 ```
+
+Then run `shutdown restart`.
 
 To stop receiving future updates without deleting installed files:
 

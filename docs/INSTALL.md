@@ -55,14 +55,39 @@ Wenn der Test überzeugt und ein Wechsel zu Tibber in Frage kommt, ist der
 freiwillige Einladungslink getrennt von der technischen Anleitung im README
 und in `API_AND_PRIVACY.md` genannt. Seine Nutzung ist keine Voraussetzung.
 
-1. Bestehende Moduldateien und FHEM-Konfiguration sichern.
-2. Benutzergeführt `FHEM/70_TibberConnect.pm` und optional
-   `FHEM/70_TibberLive.pm` in das FHEM-Modulverzeichnis kopieren.
-3. Prüfsummen vergleichen und erst danach in FHEM laden.
-4. Das Konto ohne Klartext-Token in der Definition anlegen:
+### Installation über den FHEM-Update-Kanal
+
+1. Bestehende FHEM-Konfiguration sichern.
+2. Die Update-Quelle registrieren:
 
 ```text
-reload 70_TibberConnect.pm
+update add https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+3. Ausschließlich diese Quelle prüfen:
+
+```text
+update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+4. Nur wenn die Vorschau die erwarteten Tibber-Modul- und GPlot-Dateien nennt,
+   das Paket herunterladen und installieren:
+
+```text
+update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+5. FHEM neu starten:
+
+```text
+shutdown restart
+```
+
+Die beiden Module und die sechs GPlot-Dateien werden dabei automatisch geladen;
+sie dürfen nicht manuell kopiert werden. Nach dem Neustart das Konto ohne
+Klartext-Token in der Definition anlegen:
+
+```text
 define TibberConnect TibberConnect
 set TibberConnect token <TOKEN>
 set TibberConnect refreshHomes
@@ -99,7 +124,6 @@ sind in [PRICE_PLANNING.md](PRICE_PLANNING.md) beschrieben.
 Optionales Live-Modul, genau eine Home-Zuordnung je Instanz:
 
 ```text
-reload 70_TibberLive.pm
 define TibberLive TibberLive TibberConnect
 set TibberLive selectHome <GEPRUEFTE_HOME_ID>
 set TibberLive batteryAgeMonths 0..12
@@ -115,17 +139,15 @@ Für weitere Homes wird je Home eine weitere TibberLive-Instanz angelegt; insges
 höchstens zwei. Eine Instanz wechselt nicht automatisch, wenn das Standard-Home
 von TibberConnect später geändert wird.
 
-Die Diagrammdateien aus `www/gplot` werden benutzergeführt nach `www/gplot` der
-FHEM-Installation kopiert. Beispiele für FileLog und DbLog liegen unter
-`examples/`. Sie müssen an lokale Gerätenamen und Pfade angepasst werden.
-Für die zusätzliche, nur zukünftige Preisprognose erst
-`TibberConnect_PriceForecast.gplot` kopieren und danach
-`examples/tibber-forecast.cfg` Zeile für Zeile mit einem vorhandenen lokalen
-Log-Verzeichnis prüfen. Das optionale Attribut `forecastLogFile` erzeugt nur
-diese getrennte Quelle; vorhandene Logs bleiben unverändert. Die dort enthaltene
-`fixedrange`-Zeile muss unveraendert bleiben: In einer gespeicherten FHEM-CFG
-werden die Perl-Semikolons als `;;` geschrieben, damit FHEM die gesamte
-Perl-Expression als ein Attribut speichert.
+Die sechs Diagrammdateien aus `www/gplot` sind bereits über den Update-Kanal
+installiert. Beispiele für FileLog und DbLog liegen unter `examples/`; deren
+Definitionen müssen an lokale Gerätenamen und Pfade angepasst werden. Für die
+zusätzliche, nur zukünftige Preisprognose `examples/tibber-forecast.cfg` Zeile
+für Zeile mit einem vorhandenen lokalen Log-Verzeichnis prüfen. Das optionale
+Attribut `forecastLogFile` erzeugt nur diese getrennte Quelle; vorhandene Logs
+bleiben unverändert. Die dort enthaltene `fixedrange`-Zeile muss unveraendert
+bleiben: In einer gespeicherten FHEM-CFG werden die Perl-Semikolons als `;;`
+geschrieben, damit FHEM die gesamte Perl-Expression als ein Attribut speichert.
 
 Deutsch – optionale stündliche Benachrichtigung: Ein eigener DOIF/notify darf
 stündlich `liveStatus` und `batteryMaintenance` prüfen und anschließend den vom
@@ -145,6 +167,54 @@ selbst versendet nichts. Beispielbedingung:
 > real devices remains entirely the operator's responsibility. Back up,
 > validate and test separately before production use.
 
+### Installation through the FHEM update channel
+
+1. Back up the existing FHEM configuration.
+2. Register the update source:
+
+```text
+update add https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+3. Check only this source:
+
+```text
+update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+4. Only when the preview lists the expected Tibber module and GPlot files,
+   download and install the package:
+
+```text
+update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+```
+
+5. Restart FHEM:
+
+```text
+shutdown restart
+```
+
+The two modules and all six GPlot files are installed automatically. Do not
+copy them manually. After the restart, define the account without putting the
+token in the definition line:
+
+```text
+define TibberConnect TibberConnect
+set TibberConnect token <TOKEN>
+set TibberConnect refreshHomes
+get TibberConnect homes
+set TibberConnect selectHome <VERIFIED_HOME_ID>
+```
+
+For optional live data, after checking the dependency inventory:
+
+```text
+define TibberLive TibberLive TibberConnect
+set TibberLive selectHome <VERIFIED_HOME_ID>
+set TibberLive batteryAgeMonths 0..12
+```
+
 ### Demo without a Tibber contract
 
 As of 18 October 2026, the official
@@ -156,9 +226,7 @@ Explorer instead of copying a static demo token or home ID: Tibber may rotate
 either value. After locally setting the token, run `refreshHomes` and choose
 the demo home ID exposed in `availableHomes`.
 
-Back up the existing modules and configuration, copy the two candidate files as
-a user-operated action, verify their hashes, and then use the same commands shown
-above. There is one TibberLive instance per home and never more than two live
+There is one TibberLive instance per home and never more than two live
 connections. Store the token with `set TibberConnect token`; never put it on the
 `define` line. For a legacy definition, wait for protected storage to succeed,
 then run `modify TibberConnect TibberConnect` and `save`; the module deliberately
@@ -191,8 +259,7 @@ uses the local cache and never controls an appliance. See
 [PRICE_PLANNING.md](PRICE_PLANNING.md) for all readings and a safe user-owned
 display example.
 
-For the optional future-only price forecast, first copy
-`TibberConnect_PriceForecast.gplot`, then review and enter
-`examples/tibber-forecast.cfg` line by line with an existing local log
-directory. The optional `forecastLogFile` attribute creates only that separate
-source; existing logs stay unchanged.
+For the optional future-only price forecast, the GPlot file is already installed
+by the update channel. Review and enter `examples/tibber-forecast.cfg` line by
+line with an existing local log directory. The optional `forecastLogFile`
+attribute creates only that separate source; existing logs stay unchanged.

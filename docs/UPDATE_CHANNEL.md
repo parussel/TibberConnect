@@ -15,8 +15,8 @@ FHEM-Konfiguration. Die Übersicht ist bewusst ein Beispiel; ein Update darf
 niemals eigene Hilfsfunktionen überschreiben.
 
 README, Installationshilfe, Rückweg-Hinweise und weitere Beispiele bleiben im
-GitHub-Projekt als lesbare Dokumentation. Das vollständige Downloadpaket bleibt
-für eine Neuinstallation verfügbar.
+GitHub-Projekt als lesbare Dokumentation. Auch eine Neuinstallation verwendet
+den Update-Kanal; Modul- und GPlot-Dateien werden nicht manuell kopiert.
 
 Die Befehle einzeln im FHEM-Kommandoeingabefeld ausführen:
 
@@ -25,21 +25,20 @@ update add https://raw.githubusercontent.com/parussel/TibberConnect/main/control
 ```
 
 ```text
-update check TibberConnect
+update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
 ```
 
 Erst wenn die Vorschau ausschließlich die erwarteten zwei Moduldateien und
 gegebenenfalls die sechs Tibber-GPlot-Dateien nennt:
 
 ```text
-update all TibberConnect
+update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
 ```
 
-Danach die beiden Module gezielt neu laden:
+Danach FHEM neu starten:
 
 ```text
-reload 70_TibberConnect.pm
-reload 70_TibberLive.pm
+shutdown restart
 ```
 
 Bestehende Geräte, Readings und persönliche Konfigurationen bleiben
@@ -67,11 +66,11 @@ Add, review and apply updates separately:
 
 ```text
 update add https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
-update check TibberConnect
-update all TibberConnect
+update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
 ```
 
-Reload both modules afterwards. To stop future updates without removing files:
+Restart FHEM afterwards. To stop future updates without removing files:
 
 ```text
 update delete https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
