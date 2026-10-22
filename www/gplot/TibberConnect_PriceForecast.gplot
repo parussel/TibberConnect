@@ -1,0 +1,8 @@
+# Range: future forecast horizon
+# Aggregation: quarter-hour
+set terminal png transparent size <SIZE> crop
+set title 'Tibber price forecast'
+set ylabel 'EUR/kWh'
+set y2tics
+#FileLog 4:price
+plot '<IN>' using 1:2 axes x1y1 title 'forecast price' with steps

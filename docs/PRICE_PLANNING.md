@@ -1,5 +1,7 @@
 # Price planning / Preisplanung
 
+## Deutsch
+
 TibberConnect wertet die bereits zwischengespeicherten Preise beratend aus. Das
 Modul schaltet weder Wallboxen noch andere Verbraucher und erzeugt für eine
 Neuberechnung keine zusätzliche Tibber-Abfrage.
@@ -46,6 +48,36 @@ Obergrenze ausgegeben: Tibber liefert kalenderbezogen Preise für heute und
 morgen, der nutzbare Vorausblick ist daher je nach Tageszeit unterschiedlich;
 an einer Zeitumstellung hat ein Tag zudem nicht immer 96 Viertelstunden.
 
+### Maschinenlesbare Prognose und Zeitabfragen
+
+`priceForecastData` enthält als einzelnes, kompaktes JSON-Reading die noch
+zusammenhängenden Preise. Jedes Intervall enthält `startsAt`, `endsAt`,
+`startEpoch`, `endEpoch`, `total`, `energy`, `tax`, `currency` und `level`.
+Die Epoch-Zeiten machen die wiederholte Stunde einer Zeitumstellung eindeutig.
+Das Reading wird absichtlich ohne Event geschrieben: Es entstehen weder
+hunderte dauerhafte Einzelreadings noch zusätzliche Einträge in vorhandenen
+FileLog-/DbLog-Historien.
+
+Die folgenden Abfragen verwenden ausschließlich den lokalen Cache und lösen
+keine Tibber-Anfrage aus. Ohne Zusatz geben sie eine kurze deutsche
+Statusmeldung aus:
+
+```text
+get TibberConnect pricesToday
+get TibberConnect pricesTomorrow
+get TibberConnect forecast
+get TibberConnect priceAt 2026-10-25T02:15:00+02:00
+get TibberConnect priceAt 1792890900
+```
+
+Der ausdr&uuml;ckliche Zusatz `json` liefert stattdessen kanonisches JSON, zum Beispiel
+`get TibberConnect forecast json` oder
+`get TibberConnect priceAt 1792890900 json`. `pricesTomorrow` meldet
+`state=pending`, solange Tibber noch keine morgigen Preise geliefert hat; es
+werden keine Werte erfunden. `priceAt` meldet `state=not_found`, wenn der
+Zeitpunkt au&szlig;erhalb des Caches liegt. Die optionale getrennte Prognosedatei
+und das GPlot-Beispiel stehen in [VISUALIZATION.md](VISUALIZATION.md).
+
 ### Preisentwicklung der nächsten Werte
 
 `priceTrend...` bewertet ohne zusätzliche API-Abfrage die zehn nächsten
@@ -85,3 +117,103 @@ Logdateien, Screenshots oder ein Repository.
 
 Eine einrichtbare klassische FHEMWEB-Ansicht mit Preis- und Leistungsdiagramm
 beschreibt [VISUALIZATION.md](VISUALIZATION.md).
+
+## English
+
+TibberConnect evaluates prices already held in its local cache and remains
+advisory. It neither controls a wallbox or another appliance nor makes an extra
+Tibber request merely to recalculate a window.
+
+Select an exact contiguous duration from one through six hours. Two hours is the
+default when the attribute is absent:
+
+```text
+attr TibberConnect priceWindowHours 6
+```
+
+The value `6` means the cheapest complete six-hour block in the available price
+horizon. It does not mean “somewhere during the next six hours” or a variable
+duration from zero through six hours.
+
+The configured result is exposed through `nextCheapestWindowStart`,
+`nextCheapestWindowEnd`, `nextCheapestWindowAverage`, and
+`nextCheapestWindowHours`. The existing `cheapestWindow2h...` readings always
+remain fixed at two hours. Separate `todayPrice...` and `tomorrowPrice...`
+statistics are published; `tomorrowPriceState=pending` and numerical values are
+`unknown` until Tibber supplies the next day's prices.
+
+### Price forecast
+
+The local cache also exposes its usable, contiguous future horizon:
+
+- `priceForecastIntervals`: complete price intervals that have not started;
+- `priceForecastDurationMinutes`: their contiguous remaining duration in
+  minutes;
+- `priceForecastUntil`: end of that horizon;
+- `priceForecastState`: `ready` or `expired`.
+
+For example, a display can render “Price forecast: 73 price intervals / 18 h
+15 min, known until ...”. The module intentionally does **not** use 96 as a
+fixed maximum: Tibber supplies calendar-day prices for today and tomorrow, so
+the usable horizon varies throughout the day; daylight-saving transitions also
+do not always have 96 quarter-hours per day.
+
+### Machine-readable forecast and time lookups
+
+`priceForecastData` is one compact JSON reading containing the remaining
+contiguous prices. Every interval carries `startsAt`, `endsAt`, `startEpoch`,
+`endEpoch`, `total`, `energy`, `tax`, `currency`, and `level`. Epoch values
+make repeated daylight-saving hours unambiguous. The reading is intentionally
+written without an event: it creates neither hundreds of persistent individual
+readings nor extra records in existing FileLog/DbLog histories.
+
+The following queries use only the local cache and never make a Tibber request.
+Without an extra argument they return a concise German status message:
+
+```text
+get TibberConnect pricesToday
+get TibberConnect pricesTomorrow
+get TibberConnect forecast
+get TibberConnect priceAt 2026-10-25T02:15:00+02:00
+get TibberConnect priceAt 1792890900
+```
+
+The explicit `json` argument returns canonical JSON instead, for example
+`get TibberConnect forecast json` or
+`get TibberConnect priceAt 1792890900 json`. `pricesTomorrow` returns
+`state=pending` until Tibber has supplied tomorrow's prices; no prices are
+invented. `priceAt` returns `state=not_found` outside the cache. The optional
+separate forecast file and GPlot example are documented in
+[VISUALIZATION.md](VISUALIZATION.md).
+
+### Upcoming price trend
+
+Without another API request, `priceTrend...` evaluates the next ten complete,
+contiguous price intervals. It compares the average of the first five with the
+average of the following five. A difference of at least 0.5 ct/kWh produces
+`rising` or `falling`; a smaller difference produces `steady`. Fewer than ten
+contiguous values produce `unavailable`.
+
+- `priceTrendDirection`: `rising`, `steady`, `falling`, or `unavailable`;
+- `priceTrendDelta`: difference between both averages in EUR/kWh;
+- `priceTrendIntervals`: used interval count, normally `10`;
+- `priceTrendHorizonMinutes`: actual evaluated duration, normally `150` for
+  quarter-hour prices.
+
+The display may map these technical values to a local-language arrow and text.
+They remain advisory and never make a switching decision.
+
+### Example: a user-owned display reading
+
+```text
+attr TibberConnect priceWindowHours 5
+attr TibberConnect userReadings myCarWindow { ReadingsVal("TibberConnect","nextCheapestWindowStart","unknown")." - ".ReadingsVal("TibberConnect","nextCheapestWindowEnd","unknown") }
+```
+
+This only combines start and end for display. Advanced Perl/DOIF logic may add
+vehicle readiness, price thresholds, or local scheduling rules. Users must build
+and safeguard any actual switching outside TibberConnect. Never place a personal
+Tibber token in a definition, script, log, screenshot, or repository.
+
+For a copyable classic FHEMWEB view with price and live-power plots, see
+[VISUALIZATION.md](VISUALIZATION.md).

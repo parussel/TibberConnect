@@ -61,6 +61,7 @@ sub TibberConnect_Initialize {
         . " disable:0,1"
         . " homeId"
         . " priceWindowHours:1,2,3,4,5,6"
+        . " forecastLogFile"
         . " $readingFnAttributes"; # includes event-on-change-reading/event-min-interval
 }
 
@@ -369,7 +370,38 @@ sub TibberConnect_Get {
         );
     }
 
-    return "Unknown argument $cmd, choose one of homes";
+    my $intervals = $hash->{helper}{priceCache};
+    if ($cmd eq "pricesToday" || $cmd eq "pricesTomorrow") {
+        return "Usage: get $hash->{NAME} $cmd [json]"
+          if defined $a[2] && $a[2] ne "json";
+        my $export = TibberConnect_PriceExport(
+            $intervals, time(), $cmd eq "pricesToday" ? "today" : "tomorrow");
+        return TibberConnect_EncodeJson($export) if defined $a[2];
+        return TibberConnect_PriceExportSummary($export);
+    }
+
+    if ($cmd eq "forecast") {
+        return "Usage: get $hash->{NAME} forecast [json]"
+          if defined $a[2] && $a[2] ne "json";
+        my $forecast = TibberConnect_ForecastExport($intervals, time());
+        return TibberConnect_EncodeJson($forecast) if defined $a[2];
+        return TibberConnect_ForecastSummary($forecast);
+    }
+
+    if ($cmd eq "priceAt") {
+        return "priceAt needs an ISO-8601 timestamp or Unix epoch"
+          if !defined $a[2] || $a[2] eq "";
+        my $epoch = TibberConnect_ParseEpoch($a[2]);
+        return "priceAt needs an ISO-8601 timestamp or Unix epoch"
+          if !defined $epoch;
+        return "Usage: get $hash->{NAME} priceAt <ISO-8601-with-offset|Unix-epoch> [json]"
+          if defined $a[3] && $a[3] ne "json";
+        my $price_at = TibberConnect_PriceAtExport($intervals, $epoch, $a[2]);
+        return TibberConnect_EncodeJson($price_at) if defined $a[3];
+        return TibberConnect_PriceAtSummary($price_at);
+    }
+
+    return "Unknown argument $cmd, choose one of homes pricesToday:noArg pricesTomorrow:noArg forecast:noArg priceAt";
 }
 
 #####################################
@@ -864,6 +896,242 @@ sub TibberConnect_PriceForecast {
     };
 }
 
+sub TibberConnect_ContiguousFutureIntervals {
+    my ($intervals, $now) = @_;
+    return [] if ref($intervals) ne "ARRAY" || !defined $now;
+
+    my @future = grep {
+        defined $_->{startEpoch}
+          && defined $_->{endEpoch}
+          && $_->{endEpoch} > $_->{startEpoch}
+          && $_->{startEpoch} >= $now;
+    } @{$intervals};
+    return [] if !@future;
+
+    my @contiguous;
+    my $previous_end;
+    for my $item (@future) {
+        last if defined $previous_end && $item->{startEpoch} != $previous_end;
+        push @contiguous, $item;
+        $previous_end = $item->{endEpoch};
+    }
+    return \@contiguous;
+}
+
+sub TibberConnect_PublicPriceInterval {
+    my ($item, $next) = @_;
+    return undef if ref($item) ne "HASH";
+    my $ends_at = defined $next && ref($next) eq "HASH"
+      && defined $next->{startsAt}
+      && defined $item->{endEpoch}
+      && defined $next->{startEpoch}
+      && $next->{startEpoch} == $item->{endEpoch}
+      ? $next->{startsAt}
+      : TibberConnect_FormatIsoEpochWithOffset($item->{endEpoch}, $item->{startsAt});
+    return {
+        startsAt   => $item->{startsAt},
+        endsAt     => $ends_at,
+        startEpoch => int($item->{startEpoch}),
+        endEpoch   => int($item->{endEpoch}),
+        total      => defined $item->{total} ? 0 + $item->{total} : undef,
+        energy     => defined $item->{energy} ? 0 + $item->{energy} : undef,
+        tax        => defined $item->{tax} ? 0 + $item->{tax} : undef,
+        currency   => $item->{currency},
+        level      => $item->{level},
+    };
+}
+
+sub TibberConnect_ForecastExport {
+    my ($intervals, $now) = @_;
+    my $source = TibberConnect_ContiguousFutureIntervals($intervals, $now);
+    return {
+        schema => "tibberconnect-price-forecast-v1",
+        state => "expired",
+        intervals => [],
+    } if !@{$source};
+
+    my @public;
+    for my $index (0 .. $#{$source}) {
+        push @public, TibberConnect_PublicPriceInterval(
+            $source->[$index], $source->[$index + 1]);
+    }
+    return {
+        schema     => "tibberconnect-price-forecast-v1",
+        state      => "ready",
+        startsAt   => $public[0]{startsAt},
+        endsAt     => $public[-1]{endsAt},
+        startEpoch => $public[0]{startEpoch},
+        endEpoch   => $public[-1]{endEpoch},
+        intervals  => \@public,
+    };
+}
+
+sub TibberConnect_PriceExport {
+    my ($intervals, $now, $scope) = @_;
+    $scope = "today" if !defined $scope;
+    my $date_source = TibberConnect_CurrentInterval($intervals, $now);
+    $date_source = $date_source->{startsAt} if ref($date_source) eq "HASH";
+    $date_source = $intervals->[0]{startsAt}
+      if !defined $date_source && ref($intervals) eq "ARRAY" && @{$intervals};
+    my $today_date = TibberConnect_IsoDate(
+        TibberConnect_FormatIsoEpochWithOffset($now, $date_source));
+    my $date = $scope eq "tomorrow"
+      ? TibberConnect_NextCalendarDate($today_date)
+      : $today_date;
+    my @selected = ref($intervals) eq "ARRAY" && defined $date
+      ? grep { defined TibberConnect_IsoDate($_->{startsAt})
+          && TibberConnect_IsoDate($_->{startsAt}) eq $date } @{$intervals}
+      : ();
+    my @public;
+    for my $index (0 .. $#selected) {
+        push @public, TibberConnect_PublicPriceInterval(
+            $selected[$index], $selected[$index + 1]);
+    }
+    my $state = @public ? "ready"
+      : $scope eq "tomorrow" ? "pending" : "unavailable";
+    return {
+        schema    => "tibberconnect-price-export-v1",
+        scope     => $scope,
+        date      => $date,
+        state     => $state,
+        intervals => \@public,
+    };
+}
+
+sub TibberConnect_ParseEpoch {
+    my ($value) = @_;
+    return undef if !defined $value;
+    return int($value) if $value =~ /^\d+$/;
+    return undef if $value !~ /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?([+-])(\d{2}):(\d{2})$/;
+    my ($year, $month, $day, $hour, $minute, $second, $sign, $offset_hour, $offset_minute) =
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+    my $epoch = eval { timegm($second, $minute, $hour, $day, $month - 1, $year) };
+    return undef if !defined $epoch || $@;
+    my $offset = $offset_hour * 3600 + $offset_minute * 60;
+    return $sign eq "+" ? $epoch - $offset : $epoch + $offset;
+}
+
+sub TibberConnect_PriceAtExport {
+    my ($intervals, $epoch, $query) = @_;
+    my $item = TibberConnect_CurrentInterval($intervals, $epoch);
+    return {
+        schema => "tibberconnect-price-at-v1",
+        state  => "not_found",
+        query  => $query,
+    } if !defined $item;
+    return {
+        schema   => "tibberconnect-price-at-v1",
+        state    => "ready",
+        query    => $query,
+        interval => TibberConnect_PublicPriceInterval($item, undef),
+    };
+}
+
+sub TibberConnect_ShortTimestamp {
+    my ($timestamp) = @_;
+    return "unbekannt" if !defined $timestamp || $timestamp eq "";
+    return "$1 $2" if $timestamp =~ /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/;
+    return $timestamp;
+}
+
+sub TibberConnect_PriceExportSummary {
+    my ($export) = @_;
+    my $scope = ref($export) eq "HASH" && $export->{scope} eq "tomorrow"
+      ? "Preise morgen" : "Preise heute";
+    return "$scope: noch nicht verfuegbar"
+      if ref($export) eq "HASH" && $export->{state} eq "pending";
+    return "$scope: keine Daten im lokalen Cache"
+      if ref($export) ne "HASH" || $export->{state} ne "ready";
+
+    my $intervals = $export->{intervals};
+    return "$scope: keine Daten im lokalen Cache"
+      if ref($intervals) ne "ARRAY" || !@{$intervals};
+    my $first = $intervals->[0]{startsAt};
+    my $last = $intervals->[-1]{endsAt};
+    return sprintf("%s: %d Viertelstunden, bekannt von %s bis %s",
+        $scope, scalar @{$intervals},
+        TibberConnect_ShortTimestamp($first),
+        TibberConnect_ShortTimestamp($last));
+}
+
+sub TibberConnect_ForecastSummary {
+    my ($forecast) = @_;
+    return "Preisvorschau: keine zukuenftigen Preise im lokalen Cache"
+      if ref($forecast) ne "HASH" || $forecast->{state} ne "ready";
+    my $intervals = $forecast->{intervals};
+    return "Preisvorschau: keine zukuenftigen Preise im lokalen Cache"
+      if ref($intervals) ne "ARRAY" || !@{$intervals};
+    my $minutes = int(($forecast->{endEpoch} - $forecast->{startEpoch}) / 60);
+    return sprintf("Preisvorschau: %d Viertelstunden (%d Minuten), bekannt bis %s",
+        scalar @{$intervals}, $minutes,
+        TibberConnect_ShortTimestamp($forecast->{endsAt}));
+}
+
+sub TibberConnect_PriceAtSummary {
+    my ($price_at) = @_;
+    return "Preis zum Zeitpunkt unbekannt: nicht im lokalen Cache"
+      if ref($price_at) ne "HASH";
+    my $query = defined $price_at->{query} ? $price_at->{query} : "unbekannt";
+    return "Preis zum Zeitpunkt $query: nicht im lokalen Cache"
+      if $price_at->{state} ne "ready" || ref($price_at->{interval}) ne "HASH";
+    my $item = $price_at->{interval};
+    return sprintf("Preis zum Zeitpunkt %s: %.4f %s/kWh (%s bis %s)",
+        $query, $item->{total}, $item->{currency} || "EUR",
+        TibberConnect_ShortTimestamp($item->{startsAt}),
+        TibberConnect_ShortTimestamp($item->{endsAt}));
+}
+
+sub TibberConnect_EncodeJson {
+    my ($data) = @_;
+    return JSON->new->canonical->encode($data);
+}
+
+sub TibberConnect_ForecastJson {
+    my ($intervals, $now) = @_;
+    return TibberConnect_EncodeJson(TibberConnect_ForecastExport($intervals, $now));
+}
+
+sub TibberConnect_ForecastLogDeviceName {
+    my ($hash) = @_;
+    my $name = ref($hash) eq "HASH" ? ($hash->{NAME} || "TibberConnect") : "TibberConnect";
+    $name =~ s/[^A-Za-z0-9_.-]/_/g;
+    return $name . "_Forecast";
+}
+
+sub TibberConnect_ForecastFileTimestamp {
+    my ($starts_at) = @_;
+    return undef if !defined $starts_at;
+    if ($starts_at =~ /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/) {
+        return $1 . "_" . $2;
+    }
+    return undef;
+}
+
+sub TibberConnect_WriteForecastFile {
+    my ($hash, $forecast, $path_override) = @_;
+    return undef if ref($hash) ne "HASH" || ref($forecast) ne "HASH";
+    my $path = defined $path_override
+      ? $path_override
+      : AttrVal($hash->{NAME}, "forecastLogFile", "");
+    return undef if !defined $path || $path eq "";
+    return "forecastLogFile contains an unsupported NUL character" if $path =~ /\0/;
+
+    my $temporary = $path . ".tmp." . $$;
+    open my $fh, ">", $temporary
+      or return "cannot write forecastLogFile: $!";
+    my $device = TibberConnect_ForecastLogDeviceName($hash);
+    for my $item (@{$forecast->{intervals} || []}) {
+        my $stamp = TibberConnect_ForecastFileTimestamp($item->{startsAt});
+        next if !defined $stamp;
+        print {$fh} "$stamp $device price: $item->{total} startEpoch: $item->{startEpoch} endEpoch: $item->{endEpoch}\n"
+          or do { close $fh; unlink $temporary; return "cannot write forecastLogFile: $!"; };
+    }
+    close $fh or do { unlink $temporary; return "cannot close forecastLogFile: $!"; };
+    rename $temporary, $path
+      or do { unlink $temporary; return "cannot replace forecastLogFile: $!"; };
+    return undef;
+}
+
 sub TibberConnect_PriceTrend {
     my ($intervals, $now) = @_;
     return undef if ref($intervals) ne "ARRAY" || !defined $now;
@@ -921,6 +1189,12 @@ sub TibberConnect_PublishPriceInsights {
     my $negative = TibberConnect_FindNegativeWindows($intervals);
     my ($next_negative) = grep { $_->{endEpoch} > $now } @{$negative};
     my $forecast = TibberConnect_PriceForecast($intervals, $now);
+    my $forecast_export = TibberConnect_ForecastExport($intervals, $now);
+    my $forecast_json = TibberConnect_EncodeJson($forecast_export);
+    my $previous_forecast_json = ReadingsVal(
+        $hash->{NAME}, "priceForecastData", undef);
+    my $forecast_changed = !defined $previous_forecast_json
+      || $previous_forecast_json ne $forecast_json;
     my $trend = TibberConnect_PriceTrend($intervals, $now);
     my $date_source = $current ? $current->{startsAt}
       : (@{$intervals} ? $intervals->[0]{startsAt} : undef);
@@ -981,6 +1255,9 @@ sub TibberConnect_PublishPriceInsights {
         $forecast ? $forecast->{until} : "unknown");
     readingsBulkUpdate($hash, "priceForecastState",
         $forecast ? "ready" : "expired");
+    readingsBulkUpdate($hash, "priceForecastFrom",
+        $forecast_export->{state} eq "ready"
+          ? $forecast_export->{startsAt} : "unknown");
     readingsBulkUpdate($hash, "priceTrendDirection",
         $trend ? $trend->{direction} : "unavailable");
     readingsBulkUpdate($hash, "priceTrendDelta",
@@ -994,6 +1271,18 @@ sub TibberConnect_PublishPriceInsights {
     readingsBulkUpdate($hash, "automationDecision",
         $next ? "would_run:$next->{startsAt}" : "no_complete_window");
     readingsEndUpdate($hash, 1);
+
+    return if !$forecast_changed;
+
+    # This compact source is intentionally silent: normal FileLog/DbLog
+    # histories continue to receive only their configured operational readings.
+    readingsSingleUpdate($hash, "priceForecastData", $forecast_json, 0);
+    my $error = TibberConnect_WriteForecastFile($hash, $forecast_export);
+    my $status = defined $error ? "error:$error"
+      : AttrVal($hash->{NAME}, "forecastLogFile", "") ne ""
+      ? $forecast_export->{state} eq "ready" ? "ready" : "empty"
+      : "disabled";
+    readingsSingleUpdate($hash, "priceForecastFileStatus", $status, 0);
 }
 
 sub TibberConnect_PriceWindowHours {
@@ -1498,6 +1787,25 @@ sub TibberConnect_Attr {
         return undef;
     }
 
+    if ($attribute eq 'forecastLogFile') {
+        return 'forecastLogFile must not contain a NUL character'
+          if $command eq 'set' && defined $value && $value =~ /\0/;
+        return undef if !$hash;
+
+        if ($command eq 'del') {
+            readingsSingleUpdate($hash, 'priceForecastFileStatus', 'disabled', 0);
+            return undef;
+        }
+
+        my $forecast = TibberConnect_ForecastExport(
+            $hash->{helper}{priceCache}, time());
+        my $error = TibberConnect_WriteForecastFile($hash, $forecast, $value);
+        readingsSingleUpdate($hash, 'priceForecastFileStatus',
+            defined $error ? "error:$error"
+            : $forecast->{state} eq 'ready' ? 'ready' : 'empty', 0);
+        return undef;
+    }
+
     if ($attribute eq "disable") {
         if ($command eq "set" && $value) {
             RemoveInternalTimer($hash) if $hash;
@@ -1536,6 +1844,18 @@ with <code>set TibberConnect token &lt;TOKEN&gt;</code>. Use
 <code>refreshHomes</code>, <code>selectHome</code>, and <code>update</code>.
 The module caches quarter-hour prices and retrieves delayed consumption
 separately. The token is not part of the definition.</p>
+<p><code>get &lt;device&gt; pricesToday</code>, <code>pricesTomorrow</code>,
+<code>forecast</code> and <code>priceAt &lt;ISO-8601-with-offset|Unix-epoch&gt;</code>
+return concise operator messages from the local cache. Add <code>json</code> to
+receive compact machine data, for example <code>get TibberConnect forecast json</code>.
+<code>priceForecastData</code> is the same future forecast as one silent reading,
+with ISO and epoch start/end bounds for each interval. It neither causes another
+API request nor creates one reading per price interval.</p>
+<p>Optional <code>attr &lt;device&gt; forecastLogFile &lt;absolute path&gt;</code>
+creates a separate generated FHEM FileLog-compatible forecast source. It never
+modifies configured operational FileLog/DbLog histories. See the supplied
+<code>examples/tibber-forecast.cfg</code> for a deliberately user-operated SVG
+setup and rollback.</p>
 <p><code>attr TibberConnect priceWindowHours &lt;1..6&gt;</code> selects the exact
 contiguous duration for <code>nextCheapestWindowStart</code>,
 <code>nextCheapestWindowEnd</code>, and <code>nextCheapestWindowAverage</code>.
@@ -1558,6 +1878,19 @@ Geheimnis mit <code>set TibberConnect token &lt;TOKEN&gt;</code> gesch&uuml;tzt
 speichern. Verf&uuml;gbar sind <code>refreshHomes</code>,
 <code>selectHome</code> und <code>update</code>. Viertelstundenpreise werden
 gepuffert; verz&ouml;gerte Verbrauchsdaten werden getrennt abgerufen.</p>
+<p><code>get &lt;Geraet&gt; pricesToday</code>, <code>pricesTomorrow</code>,
+<code>forecast</code> und <code>priceAt &lt;ISO-8601-mit-Offset|Unix-epoch&gt;</code>
+liefern kurze Statusmeldungen allein aus dem lokalen Cache. Der Zusatz
+<code>json</code> liefert die kompakten Maschinendaten, etwa mit
+<code>get TibberConnect forecast json</code>. Das einzelne stille Reading
+<code>priceForecastData</code> enth&auml;lt dieselbe Zukunftsprognose mit ISO- und
+Epoch-Grenzen je Intervall. Es verursacht weder eine weitere API-Abfrage noch
+ein Reading je Preisintervall.</p>
+<p>Optional erzeugt <code>attr &lt;Geraet&gt; forecastLogFile &lt;absoluter Pfad&gt;</code>
+eine getrennte, FileLog-kompatible Prognosequelle. Konfigurierte operative
+FileLog-/DbLog-Historien bleiben unver&auml;ndert. Die mitgelieferte
+<code>examples/tibber-forecast.cfg</code> zeigt eine bewusst benutzergef&uuml;hrte
+SVG-Einrichtung und den R&uuml;ckweg.</p>
 <p><code>attr TibberConnect priceWindowHours &lt;1..6&gt;</code> w&auml;hlt die exakte,
 zusammenh&auml;ngende Dauer f&uuml;r <code>nextCheapestWindowStart</code>,
 <code>nextCheapestWindowEnd</code> und <code>nextCheapestWindowAverage</code>.

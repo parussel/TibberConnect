@@ -1,22 +1,20 @@
-# Sicherheitshinweise
+# Security policy
 
-Dieses unabhängige Community-Projekt ist kein offizieller Bestandteil von FHEM.
+## Supported development state
 
-## Sicherheitslücken melden
+This repository is a public release candidate under active development. It is
+not an official FHEM module and has no supported stable release yet.
 
-Teile vermutete Sicherheitslücken vertraulich mit dem Repository-Eigentümer.
-Veröffentliche in öffentlichen Tickets keine Zugangstoken, Home-IDs, Adressen,
-Zählerkennungen, UUIDs, Konfigurationsauszüge oder produktiven Logs.
+## Reporting
 
-## Zugangsdaten schützen
+Report suspected vulnerabilities privately to the repository owner. Do not open a public issue containing an access token, home identifier, address, meter identifier, UUID, configuration export or production log.
 
-- Tibber-Zugangstoken und andere Geheimnisse nicht in GitHub-Dateien,
-  Definitionen, Screenshots oder öffentliche Diagnoseausgaben einfügen.
-- Für Beispiele nur allgemeine oder synthetische Daten verwenden.
-- Werden Zugangsdaten versehentlich veröffentlicht, den betroffenen Token
-  unverzüglich widerrufen und ersetzen.
+## Secret-handling rules
 
-Der geschützte FHEM-Schlüsselspeicher ist für den Tibber-Zugangstoken
-vorgesehen. Bei älteren Definitionen mit Klartext-Token zeigt das Modul einen
-Migrationshinweis an; die vorhandene Konfiguration wird nicht automatisch
-umgeschrieben.
+- Never commit personal Tibber access tokens, OAuth secrets or copied FHEM configuration/state.
+- Use only synthetic identifiers and data in tests, examples and documentation.
+- Mask authorization material and identifiers in diagnostics before they reach FHEM readings or logs.
+- Revoke a token immediately if it is accidentally disclosed.
+- Release verification must scan tracked files and the generated package for secret-shaped content.
+
+The protected FHEM key-value store is the intended token location for the finished module. Legacy plaintext definitions receive an explicit migration path; the module must not silently rewrite user configuration.

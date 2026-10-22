@@ -1,117 +1,137 @@
-# TibberConnect und TibberLive für FHEM
+# TibberConnect and TibberLive for FHEM
 
-`TibberConnect` verbindet FHEM mit der Tibber-REST-API. Das Modul liest Preise,
-verzögerten Verbrauch und Kosten ein und stellt beratende Preisfenster bereit.
-`TibberLive` ist ein separates, optionales Modul für Live-Messwerte eines
-Tibber Pulse. Die Module unterscheiden sich bei Datenart und Aktualisierung.
+TibberConnect is the account and REST module. It caches quarter-hour prices,
+reports delayed consumption/cost data, and calculates advisory price windows.
+TibberLive is a separate optional module for Pulse live data. This distinction is
+important: **prices**, **delayed consumption**, and **Pulse live data** have
+different update speeds and transports.
 
-> **Status und Hinweis:** Eigenständiges Community-Projekt, kein offizieller
-> Bestandteil von FHEM. Die Module wurden automatisiert und im praktischen
-> FHEM-Betrieb geprüft. Vor der Installation eine Sicherung erstellen und die
-> Einstellungen sorgfältig kontrollieren. Die Nutzung erfolgt in eigener
-> Verantwortung.
+The package contains `FHEM/70_TibberConnect.pm` and
+`FHEM/70_TibberLive.pm`. Use one TibberConnect per account and one TibberLive
+instance per home; Tibber permits at most two simultaneous live sockets.
 
-Projektinformationen: [153er-netz.de – Entwicklung](https://153er-netz.de/seiten/entwicklung.html)
+> **Status and risk:** Independent FHEM community project, currently not an
+> official part of FHEM. This public release candidate has automated checks and
+> user-operated Raspberry Pi 3/4 target tests. The documented clean-room
+> installation remains the final acceptance step; back up the installation
+> before use, especially when enabling TibberLive.
 
-## Installation und Updates
+Project information: [153er-netz.de – Development](https://153er-netz.de/seiten/entwicklung.html)
 
-Die Schritte einzeln im FHEM-Kommandoeingabefeld ausführen und jeweils die
-Rückmeldung abwarten. Vorher eine aktuelle FHEM-Sicherung anlegen.
+## Quick start
 
-Updatequelle eintragen:
+Copy the files as described in [docs/INSTALL.md](docs/INSTALL.md), then enter in
+FHEM:
+
+```text
+reload 70_TibberConnect.pm
+define TibberConnect TibberConnect
+set TibberConnect token <YOUR_PERSONAL_ACCESS_TOKEN>
+set TibberConnect refreshHomes
+```
+
+Select a discovered home if necessary:
+
+```text
+set TibberConnect selectHome <HOME_ID_FROM_AVAILABLEHOMES>
+```
+
+For live data, first complete the optional dependency inventory and then use:
+
+```text
+reload 70_TibberLive.pm
+define TibberLive TibberLive TibberConnect
+set TibberLive batteryAgeMonths 0..12
+```
+
+`0` means a new battery; `12` means twelve months or older and recommends a
+replacement after setup tests. After a replacement use `set TibberLive
+batteryReplaced`.
+
+## Compatibility and advice
+
+Preserved readings include `current_price`, `price.current`,
+`dailyConsumption`, and `dailyCost`. Clear successor readings are
+`priceIsNegative`, `nextCheapestWindowStart`, and `cheapestWindow2hStart`.
+The unrecoverable historic formulas are documented in
+[docs/HISTORICAL_PRICE_FILTERS.md](docs/HISTORICAL_PRICE_FILTERS.md). All
+automation output is advisory; this package does not switch an actuator.
+
+## Price planning / Preisplanung
+
+The `priceWindowHours` attribute accepts one through six and selects an exact
+contiguous cheapest block; the default is two hours. The configurable readings include start, end,
+average, and selected hours. Fixed `cheapestWindow2h...` readings remain for
+compatibility, and separate `todayPrice...`/`tomorrowPrice...` readings show
+calendar-day statistics. See [PRICE_PLANNING.md](docs/PRICE_PLANNING.md) for a
+German/English EV example, a safe user-owned display reading, and the local
+`priceForecast...` readings that show the remaining known price horizon.
+The cache also publishes `priceTrend...` for a smoothed, advisory comparison of
+the next ten complete known price intervals.
+
+For machine use, `get TibberConnect pricesToday`, `pricesTomorrow`, `forecast`,
+and `priceAt <ISO-8601-with-offset|Unix-epoch>` return concise operator
+messages. Add `json` for local-cache JSON with both ISO and epoch validity
+bounds. One compact `priceForecastData` reading avoids a large set of individual
+readings. The optional separate future-price FileLog/GPlot source is documented
+in [PRICE_PLANNING.md](docs/PRICE_PLANNING.md) and
+[VISUALIZATION.md](docs/VISUALIZATION.md); it never changes normal history.
+
+Plots are in `www/gplot`; safe logging examples are in `examples`. The
+[visualization guide](docs/VISUALIZATION.md) includes a standard-FHEM dashboard
+example without SQLite or DbLog.
+
+## Voluntary Tibber invitation link
+
+If my work around Tibber and its possible applications has convinced you and
+you would like to switch to Tibber, you may voluntarily use my personal
+[Tibber invitation link](https://invite.tibber.com/3mhcd54v). This supports my
+work, and both of us may benefit from the terms currently offered by Tibber's
+invitation program. Using this link is not a requirement for installation or
+use of this software.
+
+**Deutsch:** Wenn dich meine Arbeit rund um Tibber und die damit möglichen
+Anwendungen überzeugt hat und du selbst zu Tibber wechseln möchtest, kannst du
+freiwillig meinen persönlichen
+[Tibber-Einladungslink](https://invite.tibber.com/3mhcd54v) verwenden. Damit
+unterstützt du meine Arbeit – und wir profitieren beide von den jeweils
+geltenden Vorteilen des Tibber-Einladungsprogramms. Die Nutzung dieses Links ist
+keine Voraussetzung für die Installation oder Verwendung der Software.
+
+Official API documentation: <https://developer.tibber.com/docs/>
+
+## FHEM update channel
+
+After the initial manual installation, FHEM can receive later module and
+GPlot updates from this repository. The update channel deliberately contains
+only the two module files and the six supplied GPlot files. It never writes a
+token, Home-ID, device definition, FileLog, SVG device, FHEM configuration or
+personal `99_myUtils.pm`.
+
+Enter the commands separately in the FHEM command field:
 
 ```text
 update add https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
 ```
 
-Zuerst nur die Vorschau abrufen:
-
 ```text
-update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+update check TibberConnect
 ```
 
-Die Vorschau muss die beiden Tibber-Module und die fünf mitgelieferten
-GPlot-Dateien nennen. Nur wenn die Liste passt, das Update ausführen:
+Inspect the preview. Only when it lists the expected Tibber module/GPlot files:
 
 ```text
-update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
+update all TibberConnect
 ```
 
-Danach die Moduländerungen aktivieren:
+To stop receiving future updates without deleting installed files:
 
 ```text
-shutdown restart
+update delete https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
 ```
 
-Die Steuerdatei aktualisiert ausschließlich `FHEM/70_TibberConnect.pm`,
-`FHEM/70_TibberLive.pm` und die fünf Projektdateien unter `www/gplot/`. Sie
-enthält keine FHEM-Konfiguration, Geräte-Definitionen, Zugangsdaten, Home-IDs,
-Logs oder persönlichen Hilfsfunktionen.
+The complete scope, reloading steps and rollback path are in
+[UPDATE_CHANNEL.md](docs/UPDATE_CHANNEL.md).
 
-## Erste Einrichtung
-
-Nach dem Neustart das Hauptmodul definieren und den persönlichen Token getrennt
-setzen:
-
-```text
-define TibberConnect TibberConnect
-set TibberConnect token <PERSÖNLICHER_TOKEN>
-set TibberConnect refreshHomes
-get TibberConnect homes
-```
-
-Eine gefundene Home-ID anschließend aus `availableHomes` übernehmen:
-
-```text
-set TibberConnect selectHome <HOME_ID>
-```
-
-Der Token wird im geschützten FHEM-Schlüsselspeicher abgelegt. Er gehört nicht
-in die `define`-Zeile und sollte nicht in Screenshots, Logs oder öffentlichen
-Nachrichten geteilt werden.
-
-## TibberLive (optional)
-
-Für Live-Daten müssen Tibber Pulse und Home entsprechend eingerichtet sein.
-Zusätzlich benötigt TibberLive die Perl-Abhängigkeiten
-`AnyEvent::WebSocket::Client` und `EV`. TibberLive installiert keine
-Systempakete selbst. Bitte die Verfügbarkeit und Installation für die eigene
-Linux-Distribution prüfen, bevor das Modul aktiviert wird.
-
-`TibberConnect` muss zuerst eingerichtet sein. Danach kann eine
-TibberLive-Instanz angelegt werden:
-
-```text
-define TibberLive TibberLive TibberConnect
-set TibberLive batteryAgeMonths 0..12
-```
-
-Je Home ist eine Instanz vorgesehen; insgesamt sind höchstens zwei gleichzeitige
-Live-Verbindungen möglich. Die Batterieanzeige ist eine Erinnerung anhand des
-Alters und kein Messwert für den tatsächlichen Ladezustand.
-
-## Funktionen
-
-- Preise und verzögerte Verbrauchs-/Kostenwerte aus der Tibber-API;
-- Auswahl eines vollständigen, zusammenhängenden Preisfensters von einer bis
-  sechs Stunden (`priceWindowHours`, Standard: zwei Stunden);
-- optionale Live-Messwerte und Batteriewartungshinweise mit TibberLive;
-- Beispiele für FileLog, DbLog, Diagramme und eine FHEM-Übersicht.
-
-Preisfenster und weitere Readings sind nur Empfehlungen. Die Module schalten
-keine Wallboxen oder sonstigen Verbraucher. Weitere Hinweise stehen in
-[docs/PRICE_PLANNING.md](docs/PRICE_PLANNING.md) und
-[docs/VISUALIZATION.md](docs/VISUALIZATION.md).
-
-## Lizenz und Tibber-Dokumentation
-
-Lizenz: GNU General Public License, Version 2. Siehe [LICENSE](LICENSE).
-Informationen zu Zugriffstoken und Datenschutz stehen in
-[docs/API_AND_PRIVACY.md](docs/API_AND_PRIVACY.md).
-
-Offizielle Dokumentation: [Tibber API](https://developer.tibber.com/docs/).
-
-Wenn dich meine Arbeit rund um Tibber überzeugt hat und du selbst zu Tibber
-wechseln möchtest, kannst du freiwillig meinen persönlichen
-[Tibber-Einladungslink](https://invite.tibber.com/3mhcd54v) verwenden. Er ist
-keine Voraussetzung für Installation oder Nutzung der Software.
+The final fresh-install acceptance procedure is documented in
+[CLEAN_ROOM_ACCEPTANCE.md](docs/CLEAN_ROOM_ACCEPTANCE.md).

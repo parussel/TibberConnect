@@ -1,42 +1,45 @@
-# Tibber-API, Sicherheit und Datenschutz
+# Tibber API, security, and privacy
 
-`TibberConnect` fragt die Tibber-GraphQL-API über HTTPS ab. Preiswerte werden
-zwischengespeichert; Verbrauchsdaten werden getrennt und seltener abgefragt.
-Wiederholungsversuche sind begrenzt und erfolgen mit Wartezeit.
+TibberConnect calls `https://api.tibber.com/v1-beta/gql` with an identifying
+User-Agent. Tibber documents a limit of **100 requests in 5 minutes per IP**.
+Prices are cached; delayed consumption is fetched separately and less often.
+Retries use bounded exponential backoff and jitter.
 
-`TibberLive` liest die für das Home verfügbare Live-URL aus und verwendet das
-GraphQL-WebSocket-Protokoll. Tibber erlaubt höchstens zwei gleichzeitige
-Live-WebSocket-Verbindungen. Fehler bei der Authentifizierung führen nicht zu
-unbegrenzten Wiederholungsversuchen mit demselben Token.
+TibberLive first reads `realTimeConsumptionEnabled` and the dynamic
+`websocketSubscriptionUrl`, then uses the `graphql-transport-ws` subprotocol.
+Tibber permits at most two live WebSockets. Authentication failures are not
+retried with the same token.
 
-Der offizielle Live-Datensatz enthält ein Signalstärke-Feld, jedoch keinen
-Messwert für Batterieladestand oder Batteriespannung. `batteryMaintenance` ist
-eine Wartungserinnerung anhand des eingestellten Alters und kein gemessener
-Batteriezustand. Das Standardintervall beträgt 365 Tage; 30 Tage vor dem
-Fälligkeitstermin wird gewarnt. Die tatsächliche Lebensdauer hängt unter anderem
-von Batterietyp und Einsatzbedingungen ab.
+The official live schema provides `signalStrength` but no supported battery charge
+or battery-voltage field. `batteryMaintenance` is only a calendar reminder and
+never a measured battery level. The default is 365 days for a standard commercially available battery,
+with a warning 30 days in advance. Actual life
+varies by chemistry, meter, radio conditions, and setup history; users may set
+`batteryLifetimeDays` after making their own informed choice.
 
-## Zugangstoken und persönliche Daten
+Tokens are stored through FHEM protected key-value storage. They must not appear
+in definitions, logs, screenshots, issues, release files, or diagnostic output.
+For backward compatibility, a token found in a legacy definition is copied to
+protected storage and a token-free `modify <name> TibberConnect` command is
+shown. The user must run that command and save; the module deliberately does not
+rewrite an existing definition automatically.
+Home IDs, addresses, consumption, costs, and live measurements are personal data.
+Sanitize them before sharing. OAuth is appropriate for a distributed third-party
+application; personal access tokens are intended for the owner's own integration.
 
-Zugangstoken werden im geschützten FHEM-Schlüsselspeicher abgelegt. Sie sollten
-nicht in Definitionen, Logs, Screenshots, öffentlichen Fehlerberichten oder
-Diagnoseausgaben erscheinen. Wird ein Token aus einer älteren Definition
-übernommen, zeigt das Modul den Befehl an, mit dem die tokenfreie Definition
-hergestellt werden kann. Die bestehende Definition wird nicht stillschweigend
-geändert.
+Official sources:
 
-Home-IDs, Adressen, Verbrauchs- und Kostendaten sowie Live-Messwerte können
-personenbezogen sein. Entferne solche Angaben vor dem Teilen von Logs oder
-Konfigurationsauszügen. Persönliche Zugriffstoken sind für die eigene
-Integration bestimmt; für eine verteilte Drittanbieter-Anwendung gelten andere
-Anforderungen.
+- <https://developer.tibber.com/docs/guides/calling-api>
+- <https://developer.tibber.com/api/reference.md>
 
-## Offizielle Quellen
+No Data API capability is claimed unless it is separately verified and tested.
 
-- [Tibber API aufrufen](https://developer.tibber.com/docs/guides/calling-api)
-- [Tibber API-Referenz](https://developer.tibber.com/api/reference.md)
+## Voluntary invitation disclosure
 
-Der optionale persönliche [Tibber-Einladungslink](https://invite.tibber.com/3mhcd54v)
-ist keine Voraussetzung für Installation oder Nutzung der Software.
+The confirmed personal Tibber invitation link is
+<https://invite.tibber.com/3mhcd54v>. It is clearly separated from technical
+instructions and is not required for installation or use. The benefits are
+determined by Tibber's current invitation-program terms and are therefore not
+hard-coded in this documentation.
 
-Projektinformationen: [153er-netz.de – Entwicklung](https://153er-netz.de/seiten/entwicklung.html)
+Project information: [153er-netz.de – Development](https://153er-netz.de/seiten/entwicklung.html)

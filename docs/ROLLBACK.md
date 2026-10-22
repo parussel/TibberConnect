@@ -1,22 +1,27 @@
-# Wiederherstellung
+# Backup and rollback
 
-Erstelle vor jedem Update eine Sicherung der beiden Moduldateien und der
-FHEM-Konfiguration. Bewahre die Dateien mit ihren ursprünglichen Pfaden auf.
+All Raspberry steps are user-operated. Do not overwrite the known-working file
+until its path, byte size, SHA-256 hash, and timestamped backup have been recorded.
 
-Wenn nach einem Update ein Problem auftritt:
+1. Stop at the current test gate if syntax, checksum, reload, or readings differ
+   from the expected result.
+2. Disable the candidate device before rollback; do not enable automations.
+3. Restore only the exact backed-up module path. Never use a wildcard or broad
+   recursive delete.
+4. Reload the restored file, verify `state`, `connection`, `transportState`, and
+   the preserved price/consumption readings.
+5. Restore the saved FHEM configuration only if the module-file rollback is not
+   sufficient.
 
-1. TibberLive bei Bedarf deaktivieren; TibberConnect kann weiterhin REST-Daten
-   bereitstellen.
-2. Die zuvor gesicherte Version nur an den exakten Modulpfad zurückkopieren.
-   Keine Wildcards oder breit wirkenden Löschbefehle verwenden.
-3. FHEM mit `shutdown restart` neu starten.
-4. Prüfen, ob die erwarteten Readings und Zustände wieder vorhanden sind.
+The later `pi-test/rollback.sh` requires explicit safe source and destination
+arguments and never runs automatically. A rollback does not delete logs. Keep
+the new candidate, hashes, and failure output separately for diagnosis.
 
-Falls die Updatequelle nicht mehr verwendet werden soll, entferne sie mit dem
-Befehl aus [UPDATE_CHANNEL.md](UPDATE_CHANNEL.md). Das entfernt nur die Quelle,
-nicht die installierten Dateien.
+TibberLive is independent: it may be disabled or removed while TibberConnect
+continues to provide REST data. Removing TibberLive must not delete the protected
+TibberConnect token.
 
-Das Entfernen oder Deaktivieren von TibberLive löscht den geschützten
-TibberConnect-Zugangstoken nicht. Zugangsdaten und persönliche Konfigurationen
-sollten bei einer Wiederherstellung nicht durch fremde Beispielwerte ersetzt
-werden.
+If the optional forecast chart was configured, remove `forecastLogFile` and the
+user-created `FileLog_TibberForecast`/`SVG_TibberForecast` definitions first.
+Only then remove the separately chosen forecast file. This does not alter an
+existing normal TibberConnect FileLog, DbLog, readings history, or token.

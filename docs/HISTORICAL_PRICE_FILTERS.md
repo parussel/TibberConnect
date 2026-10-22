@@ -1,18 +1,30 @@
-# Historische Preis-Readings
+# Historical price-filter reconstruction
 
-Einige ältere Namen werden von dieser Version nicht mehr bereitgestellt. Für
-die jeweiligen Anzeigen und Automationen können die folgenden Readings verwendet
-werden:
+## Evidence searched
 
-| Älterer Name | Aktuelles Reading | Bedeutung |
+On 2026-10-17 the available TibberConnect source, both retained design/plan copies,
+the accessible local Codex project files, and the referenced earlier project chat
+were searched for `is_supercheap`, `next_cheapest_time`, and
+`cheapest_block_2h`. The names occur only in the approved requirement to perform
+this reconstruction. No earlier formula, unit, threshold, boundary convention, or
+missing-data rule was recoverable from the material available to this worktree.
+
+The old names are therefore not recreated with guessed semantics.
+
+## Explicit successors
+
+| Historical name | Status | Documented successor |
 | --- | --- | --- |
-| `is_supercheap` | `priceIsNegative` | `1`, wenn der aktuelle Gesamtpreis unter null liegt, sonst `0`; ohne aktuellen Preis `unknown`. |
-| `next_cheapest_time` | `nextCheapestWindowStart` | Beginn des günstigsten vollständigen, zusammenhängenden Zeitfensters gemäß `priceWindowHours`; bei fehlenden oder lückenhaften Preisen `unknown`. |
-| `cheapest_block_2h` | `cheapestWindow2hStart`, `cheapestWindow2hEnd`, `cheapestWindow2hAverage` | Start, Ende und Durchschnittspreis des günstigsten zusammenhängenden Zwei-Stunden-Fensters. |
+| `is_supercheap` | Semantics unrecoverable | `priceIsNegative`: `1` only while the current total price is strictly below `0`; otherwise `0`. Missing current data produces `unknown`, never a guessed Boolean. |
+| `next_cheapest_time` | Semantics unrecoverable | `nextCheapestWindowStart`: start timestamp of the cheapest complete contiguous window selected with `priceWindowHours` (`1..6`, default `2`) in the cached horizon. Equal-cost ties choose the earliest start. Missing/gapped horizons produce `unknown`. |
+| `cheapest_block_2h` | Semantics unrecoverable | `cheapestWindow2hStart`, `cheapestWindow2hEnd`, and `cheapestWindow2hAverage`: earliest cheapest contiguous two-hour block. For quarter-hour data this is eight slots; it is emitted only when all eight adjacent intervals exist. |
 
-Bei gleichen Preisen wird das früheste passende Zeitfenster gewählt. Ein Fenster
-wird nur ausgegeben, wenn alle dafür benötigten Preisintervalle vorhanden sind.
-Tageswechsel und Sommer-/Winterzeit werden anhand der Zeitstempel berücksichtigt.
+All successor calculations use absolute epoch boundaries derived from each
+ISO-8601 offset. This makes midnight and daylight-saving transitions continuous
+without assuming that every local day contains 96 quarter-hours.
 
-Alle Preis- und Automations-Readings sind beratend. `TibberConnect` führt keine
-FHEM-Befehle aus und steuert keine Geräte.
+## Safety contract
+
+The module publishes advice only. `automationMode` is `advisory` and
+`automationDecision` records what a later automation could do. TibberConnect does
+not execute an FHEM command or control an actuator.
