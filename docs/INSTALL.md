@@ -2,6 +2,14 @@
 
 ## Deutsch
 
+> **Sicherheit und Eigenverantwortung:** TibberConnect und TibberLive werden
+> ohne Gewähr bereitgestellt. Die Nutzung der Module, ihrer Readings,
+> Preisprognosen und Beispiele erfolgt ausschließlich auf eigene Verantwortung.
+> Die Module schalten selbst keine Verbraucher. Jede selbst eingerichtete
+> Automation, Schaltlogik oder Ansteuerung realer Geräte liegt vollständig in
+> der Verantwortung des Anwenders. Vor dem produktiven Einsatz sind Sicherung,
+> Plausibilitätsprüfung und ein getrennter Test erforderlich.
+
 Voraussetzungen: FHEM mit Perl, HTTPS für die Tibber-GraphQL-API, ein persönlicher
 Tibber-Token und mindestens ein Home. Für TibberLive muss außerdem Pulse/Watty
 gekoppelt und `realTimeConsumptionEnabled` wahr sein. Die Socket-Anbindung
@@ -129,6 +137,13 @@ selbst versendet nichts. Beispielbedingung:
 ```
 
 ## English
+
+> **Safety and responsibility:** TibberConnect and TibberLive are provided
+> without warranty. Use of the modules, their readings, price forecasts and
+> examples is entirely at the operator's own risk. The modules do not switch
+> loads themselves. Any user-created automation, control logic or actuation of
+> real devices remains entirely the operator's responsibility. Back up,
+> validate and test separately before production use.
 
 ### Demo without a Tibber contract
 

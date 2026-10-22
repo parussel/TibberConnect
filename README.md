@@ -16,6 +16,22 @@ instance per home; Tibber permits at most two simultaneous live sockets.
 > installation remains the final acceptance step; back up the installation
 > before use, especially when enabling TibberLive.
 
+> **Safety and responsibility / Sicherheit und Eigenverantwortung:**
+> TibberConnect and TibberLive are provided without warranty. Use of the
+> modules, their readings, price forecasts and examples is entirely at the
+> operator's own risk. The modules do not switch loads themselves. Any
+> user-created automation, control logic or actuation of real devices remains
+> entirely the operator's responsibility. Back up, validate and test separately
+> before production use.
+>
+> TibberConnect und TibberLive werden ohne Gewähr bereitgestellt. Die Nutzung
+> der Module, ihrer Readings, Preisprognosen und Beispiele erfolgt ausschließlich
+> auf eigene Verantwortung. Die Module schalten selbst keine Verbraucher. Jede
+> selbst eingerichtete Automation, Schaltlogik oder Ansteuerung realer Geräte
+> liegt vollständig in der Verantwortung des Anwenders. Vor dem produktiven
+> Einsatz sind Sicherung, Plausibilitätsprüfung und ein getrennter Test
+> erforderlich.
+
 Project information: [153er-netz.de – Development](https://153er-netz.de/seiten/entwicklung.html)
 
 ## Quick start
