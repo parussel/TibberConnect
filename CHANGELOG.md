@@ -3,6 +3,9 @@
 ## Public release candidate
 
 - Preserved the proven TibberConnect REST readings and multi-home selection.
+- Corrected GraphQL request construction for anonymous home discovery:
+  `operationName` is now sent only for a named GraphQL operation. This avoids
+  the former HTTP 400 / empty `availableHomes` result during first setup.
 - Added protected token storage, safe retry/backoff, separated price and
   consumption requests, quarter-hour cache, DST-safe price windows, and
   advisory automation readings.
