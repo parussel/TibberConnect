@@ -13,9 +13,8 @@ until its path, byte size, SHA-256 hash, and timestamped backup have been record
 5. Restore the saved FHEM configuration only if the module-file rollback is not
    sufficient.
 
-The later `pi-test/rollback.sh` requires explicit safe source and destination
-arguments and never runs automatically. A rollback does not delete logs. Keep
-the new candidate, hashes, and failure output separately for diagnosis.
+A rollback does not delete logs. Keep the backed-up module, its hash, and any
+failure output separately for diagnosis.
 
 TibberLive is independent: it may be disabled or removed while TibberConnect
 continues to provide REST data. Removing TibberLive must not delete the protected

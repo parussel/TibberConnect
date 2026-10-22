@@ -133,5 +133,5 @@ update delete https://raw.githubusercontent.com/parussel/TibberConnect/main/cont
 The complete scope, reloading steps and rollback path are in
 [UPDATE_CHANNEL.md](docs/UPDATE_CHANNEL.md).
 
-The final fresh-install acceptance procedure is documented in
-[CLEAN_ROOM_ACCEPTANCE.md](docs/CLEAN_ROOM_ACCEPTANCE.md).
+For a first installation, follow the manual backup, installation and
+verification steps in [INSTALL.md](docs/INSTALL.md).
