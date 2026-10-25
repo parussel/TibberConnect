@@ -17,6 +17,7 @@ use Time::Local qw(timegm);
 
 our %defs;
 our $readingFnAttributes;
+our $TibberLive_VERSION = "2.0.1";
 
 sub TibberLive_Initialize {
     my ($hash) = @_;
@@ -178,6 +179,32 @@ sub TibberLive_ScheduleEventPump {
     InternalTimer($when, "TibberLive_EventPumpTimer", $context, 0);
 }
 
+sub TibberLive_ScheduleHandshakeTimeout {
+    my ($hash, $when) = @_;
+    my $previous = $hash->{helper}{timerContexts}{handshake};
+    RemoveInternalTimer($previous) if $previous;
+    my $context = {hash => $hash, kind => "handshake"};
+    $hash->{helper}{timerContexts}{handshake} = $context;
+    $context->{generation} = $hash->{helper}{connectGeneration} || 0;
+    InternalTimer($when, "TibberLive_HandshakeTimeoutTimer", $context, 0);
+}
+
+sub TibberLive_CancelHandshakeTimeout {
+    my ($hash) = @_;
+    my $context = $hash->{helper}{timerContexts}{handshake};
+    RemoveInternalTimer($context) if $context;
+}
+
+sub TibberLive_InvalidatePendingConnect {
+    my ($hash) = @_;
+    my $pending = exists $hash->{helper}{connectCondition};
+    delete $hash->{helper}{connectCondition};
+    delete $hash->{helper}{socketClient};
+    TibberLive_CancelHandshakeTimeout($hash);
+    $hash->{helper}{connectGeneration} = ($hash->{helper}{connectGeneration} || 0) + 1
+      if $pending;
+}
+
 sub TibberLive_CancelTimers {
     my ($hash) = @_;
     return if ref($hash->{helper}{timerContexts}) ne "HASH";
@@ -212,6 +239,17 @@ sub TibberLive_EventPumpTimer {
       if $hash->{helper}{socketActive} || $hash->{helper}{connectCondition};
 }
 
+sub TibberLive_HandshakeTimeoutTimer {
+    my ($context) = @_;
+    RemoveInternalTimer($context);
+    my $hash = $context->{hash};
+    return if AttrVal($hash->{NAME}, "disable", 0);
+    return if !exists $hash->{helper}{connectCondition};
+    return if ($hash->{helper}{connectGeneration} || 0) != ($context->{generation} || 0);
+    TibberLive_InvalidatePendingConnect($hash);
+    TibberLive_OnClose($hash, 1006, "WebSocket handshake timeout", undef);
+}
+
 sub TibberLive_AnyEventConnect {
     my ($arguments) = @_;
     my $hash = $arguments->{hash};
@@ -238,21 +276,29 @@ sub TibberLive_AnyEventConnect {
     }
     $hash->{helper}{socketClient} = $client;
     $hash->{helper}{connectCondition} = $condition;
+    my $generation = ($hash->{helper}{connectGeneration} || 0) + 1;
+    $hash->{helper}{connectGeneration} = $generation;
+    TibberLive_ScheduleHandshakeTimeout($hash, time() + 45);
     TibberLive_ScheduleEventPump($hash, time() + 0.2);
     $condition->cb(sub {
         my ($completed) = @_;
+        return if ($hash->{helper}{connectGeneration} || 0) != $generation;
         delete $hash->{helper}{connectCondition};
+        TibberLive_CancelHandshakeTimeout($hash);
         my $connection = eval { $completed->recv };
         if (!$connection) {
+            delete $hash->{helper}{socketClient};
             readingsSingleUpdate($hash, "lastError",
                 TibberLive_SanitizeError($hash, $@), 1);
             TibberLive_OnClose($hash, 1006, "WebSocket handshake failed", undef);
             return;
         }
         if (!$hash->{helper}{socketActive}) {
+            delete $hash->{helper}{socketClient};
             eval { $connection->close(1000, "No longer active") };
             return;
         }
+        delete $hash->{helper}{socketClient};
         $hash->{helper}{socketConnection} = $connection;
         $hash->{helper}{socketClose} = sub {
             my ($code, $reason) = @_;
@@ -343,7 +389,7 @@ sub TibberLive_Start {
     $hash->{helper}{socketFactory}->({
         url => $url,
         protocol => "graphql-transport-ws",
-        headers => {"User-Agent" => "TibberLive-FHEM/2.0"},
+        headers => {"User-Agent" => "TibberLive-FHEM/$TibberLive_VERSION"},
         hash => $hash,
     });
 }
@@ -622,7 +668,15 @@ sub TibberLive_RecordBatteryReplacement {
 
 sub TibberLive_OnClose {
     my ($hash, $code, $reason, $random_fraction) = @_;
+    $code = 1006 if !defined $code || $code !~ /^\d+$/;
+    $reason = "WebSocket connection closed" if !defined $reason || $reason eq "";
+    TibberLive_InvalidatePendingConnect($hash);
     $hash->{helper}{socketActive} = 0;
+    readingsBeginUpdate($hash);
+    readingsBulkUpdate($hash, "lastDisconnectAt", FmtDateTime(time()));
+    readingsBulkUpdate($hash, "lastDisconnectReason",
+        TibberLive_SanitizeError($hash, $reason));
+    readingsEndUpdate($hash, 1);
     if ($code == 4401 || $code == 4403) {
         readingsSingleUpdate($hash, "connection", "authenticationError", 1);
         TibberLive_SetState($hash, "authenticationError");
@@ -662,6 +716,7 @@ sub TibberLive_CheckUrlChange {
 
 sub TibberLive_Close {
     my ($hash, $code, $reason) = @_;
+    TibberLive_InvalidatePendingConnect($hash);
     $hash->{helper}{socketClose}->($code || 1000, $reason || "Closing")
       if ref($hash->{helper}{socketClose}) eq "CODE";
     $hash->{helper}{socketActive} = 0;
@@ -714,6 +769,10 @@ after checking package availability, an administrator can use
 <code>sudo apt install libanyevent-websocket-client-perl</code>, if that package
 is available for the installed distribution. A usable <code>EV</code> module is
 also required.</p>
+<p>Version 2.0.1 adds a 45-second upper bound for each WebSocket handshake. A
+stalled attempt is detached and retried safely. The readings
+<code>lastDisconnectAt</code> and <code>lastDisconnectReason</code> expose the
+last reconnect cause without exposing the access token.</p>
 <p>Community project information:
 <a href="https://153er-netz.de/seiten/entwicklung.html">153er-netz.de / Development</a></p>
 
@@ -735,6 +794,10 @@ Paketverf&uuml;gbarkeit
 <code>sudo apt install libanyevent-websocket-client-perl</code> verwenden, sofern
 das Paket f&uuml;r die installierte Distribution verf&uuml;gbar ist. Au&szlig;erdem muss das
 Modul <code>EV</code> nutzbar sein.</p>
+<p>Version 2.0.1 begrenzt jeden WebSocket-Handshake auf 45 Sekunden. Ein
+h&auml;ngender Versuch wird sauber gel&ouml;st und erneut versucht. Die Readings
+<code>lastDisconnectAt</code> und <code>lastDisconnectReason</code> machen die
+letzte Ursache sichtbar, ohne den Zugriffstoken preiszugeben.</p>
 <p>Community-Projektinformationen:
 <a href="https://153er-netz.de/seiten/entwicklung.html">153er-netz.de / Entwicklung</a></p>
 

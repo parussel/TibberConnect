@@ -1,3 +1,7 @@
+2026-10-25 TibberLive 2.0.1
+- Behebt festhängende WebSocket-Neuverbindungen durch einen begrenzten 45-Sekunden-Handshake.
+- Neue Readings lastDisconnectAt und lastDisconnectReason erleichtern die Diagnose, ohne Tokens zu protokollieren.
+
 2026-10-18 TibberConnect / TibberLive
 - TibberConnect liest Preise sowie verzögerte Verbrauchs- und Kostendaten ein.
 - Preisfenster, Preisvorschau und Preistendenz sind beratende Readings.

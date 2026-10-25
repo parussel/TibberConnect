@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.1 — 2026-10-25
+
+- Fixed a recovery gap in TibberLive: a WebSocket handshake that never calls
+  back is now bounded by an independent 45-second timeout and enters the
+  existing controlled reconnect path.
+- Added `lastDisconnectAt` and `lastDisconnectReason` readings for concise
+  operator diagnosis. Reasons are passed through existing token redaction.
+- Added a regression test proving that an expired or obsolete handshake timer
+  cannot leave the device stuck or close a newer connection attempt.
+
 ## Public release candidate
 
 - Preserved the proven TibberConnect REST readings and multi-home selection.

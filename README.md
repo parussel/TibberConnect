@@ -20,6 +20,10 @@ Home; Tibber erlaubt höchstens zwei gleichzeitige Live-Sockets.
 > Abnahmeschritt. Vor der Verwendung – insbesondere mit TibberLive – muss die
 > Installation gesichert werden.
 
+> **Aktueller Korrekturstand 2.0.1 (25.10.2026):** TibberLive begrenzt einen
+> hängenden WebSocket-Handshake auf 45 Sekunden und dokumentiert die letzte
+> Trennung über `lastDisconnectAt` und `lastDisconnectReason`.
+
 > **Sicherheit und Eigenverantwortung:** TibberConnect und TibberLive werden
 > ohne Gewähr bereitgestellt. Die Nutzung der Module, ihrer Readings,
 > Preisprognosen und Beispiele erfolgt ausschließlich auf eigene Verantwortung.
@@ -185,6 +189,10 @@ instance per home; Tibber permits at most two simultaneous live sockets.
 > user-operated Raspberry Pi 3/4 target tests. The documented clean-room
 > installation remains the final acceptance step; back up the installation
 > before use, especially when enabling TibberLive.
+
+> **Current corrective release 2.0.1 (2026-10-25):** TibberLive bounds a
+> stalled WebSocket handshake to 45 seconds and reports its last disconnect
+> through `lastDisconnectAt` and `lastDisconnectReason`.
 
 > **Safety and responsibility:** TibberConnect and TibberLive are provided
 > without warranty. Use of the modules, their readings, price forecasts and
