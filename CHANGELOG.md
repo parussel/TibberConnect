@@ -1,48 +1,22 @@
-# Changelog
+# Änderungsprotokoll
 
 ## 2.0.1 — 2026-10-25
 
-- Fixed a recovery gap in TibberLive: a WebSocket handshake that never calls
-  back is now bounded by an independent 45-second timeout and enters the
-  existing controlled reconnect path.
-- Added `lastDisconnectAt` and `lastDisconnectReason` readings for concise
-  operator diagnosis. Reasons are passed through existing token redaction.
-- Added a regression test proving that an expired or obsolete handshake timer
-  cannot leave the device stuck or close a newer connection attempt.
+- Eine Wiederherstellungslücke in TibberLive wurde behoben: Ein WebSocket-Handshake ohne Rückmeldung wird nun durch einen unabhängigen 45-Sekunden-Zeitablauf begrenzt und wechselt in den vorhandenen kontrollierten Neuverbindungsablauf.
+- Die Readings `lastDisconnectAt` und `lastDisconnectReason` wurden für eine übersichtliche Diagnose ergänzt. Gründe durchlaufen die vorhandene Token-Maskierung.
+- Ein Regressionstest stellt sicher, dass ein abgelaufener oder überholter Handshake-Timer das Gerät weder blockiert noch einen neueren Verbindungsversuch beendet.
 
-## Public release candidate
+## Öffentlicher Release Candidate
 
-- Preserved the proven TibberConnect REST readings and multi-home selection.
-- Corrected GraphQL request construction for anonymous home discovery:
-  `operationName` is now sent only for a named GraphQL operation. This avoids
-  the former HTTP 400 / empty `availableHomes` result during first setup.
-- Added protected token storage, safe retry/backoff, separated price and
-  consumption requests, quarter-hour cache, DST-safe price windows, and
-  advisory automation readings.
-- Added the separate optional TibberLive module with `graphql-transport-ws`
-  protocol handling, dynamic `websocketSubscriptionUrl`, reconnect controls,
-  complete official live-reading mapping, health watchdog, and calendar-based
-  battery maintenance.
-- Added FileLog/DbLog examples, day/week/month/year price plots, a live-power
-  plot, tests, rollback guidance, and privacy documentation.
-- Added an optional standard-FHEM overview example that combines current price,
-  live power, price window, and ready-made SVG plots without requiring SQLite
-  or DbLog.
-- Added advisory `priceForecast...` readings for the contiguous known price
-  horizon: future interval count, remaining minutes, final known end, and
-  ready/expired state.
-- Added advisory `priceTrend...` readings that compare the first and second
-  half of the next ten complete cached price intervals without another API
-  request.
-- Added compact machine-readable local-cache exports for today, tomorrow,
-  forecast and an exact timestamp, including ISO and epoch validity bounds.
-  The optional dedicated future-price FileLog/GPlot source is opt-in and does
-  not modify operational history or create hundreds of individual readings.
-- Made normal forecast `get` commands concise German operator messages; the
-  explicit `json` argument retains their full machine-readable export.
-- Added the confirmed personal Tibber invitation link with a transparent,
-  voluntary-use disclosure and the common 153er-netz.de development reference.
-- Published as a public release candidate with a deliberately limited FHEM
-  update channel: only the two module files and six supplied GPlot files are
-  updated automatically. Tokens, Home IDs, definitions, logs, FHEM
-  configuration and personal `99_myUtils.pm` helpers remain untouched.
+- Die bewährten TibberConnect-REST-Readings und die Auswahl mehrerer Homes wurden beibehalten.
+- Die GraphQL-Anfrage für die anonyme Home-Erkennung wurde korrigiert: `operationName` wird nur noch für eine benannte GraphQL-Operation gesendet. Dadurch wird der frühere HTTP-400-Fehler mit leerem `availableHomes` bei der Ersteinrichtung vermieden.
+- Geschützte Token-Speicherung, sichere Wiederholungsversuche mit Wartezeit, getrennte Preis- und Verbrauchsabfragen, Viertelstunden-Cache, sommerzeitfeste Preisfenster und beratende Automations-Readings wurden ergänzt.
+- Das getrennte optionale Modul TibberLive wurde mit `graphql-transport-ws`, dynamischer `websocketSubscriptionUrl`, kontrollierten Neuverbindungen, vollständiger Zuordnung der Live-Readings, Zustandsüberwachung und kalenderbasierter Batteriewartung ergänzt.
+- FileLog-/DbLog-Beispiele, Preisdiagramme für Tag, Woche, Monat und Jahr, ein Live-Leistungsdiagramm, Tests, Rückkehranleitung und Datenschutzdokumentation wurden ergänzt.
+- Ein optionales Standard-FHEM-Übersichtsbeispiel verbindet aktuellen Preis, Live-Leistung, Preisfenster und fertige SVG-Diagramme ohne SQLite oder DbLog.
+- Beratende `priceForecast...`-Readings beschreiben den zusammenhängenden bekannten Preishorizont mit Intervallanzahl, Restminuten, bekanntem Endzeitpunkt und dem Zustand bereit/abgelaufen.
+- Beratende `priceTrend...`-Readings vergleichen ohne weitere API-Anfrage die erste und zweite Hälfte der nächsten zehn vollständigen Preisintervalle.
+- Kompakte maschinenlesbare Exporte aus dem lokalen Cache wurden für heute, morgen, die Prognose und einen exakten Zeitpunkt ergänzt. Die optionale getrennte FileLog-/GPlot-Quelle für zukünftige Preise verändert weder den Betriebsverlauf noch erzeugt sie Hunderte einzelne Readings.
+- Normale Prognose-`get`-Befehle liefern kurze deutsche Bedienmeldungen; das Argument `json` behält den vollständigen maschinenlesbaren Export.
+- Der bestätigte persönliche Tibber-Einladungslink wurde mit transparenter Freiwilligkeitserklärung und dem Verweis auf 153er-netz.de ergänzt.
+- Die Veröffentlichung erfolgt als öffentlicher Release Candidate mit bewusst begrenztem FHEM-Update-Kanal: Automatisch aktualisiert werden nur die beiden Moduldateien und sechs GPlot-Dateien. Token, Home-IDs, Definitionen, Protokolle, FHEM-Konfiguration und persönliche `99_myUtils.pm`-Hilfen bleiben unangetastet.

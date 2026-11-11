@@ -1,26 +1,15 @@
-# Backup and rollback
+# Sicherung und Rückkehr zum vorherigen Stand
 
-All Raspberry steps are user-operated. Do not overwrite the known-working file
-until its path, byte size, SHA-256 hash, and timestamped backup have been recorded.
+Alle Schritte auf dem Raspberry Pi werden vom Benutzer ausgeführt. Die bekannte funktionsfähige Datei darf erst überschrieben werden, nachdem Pfad, Dateigröße, SHA-256-Prüfsumme und eine Sicherung mit Zeitstempel festgehalten wurden.
 
-1. Stop at the current test gate if syntax, checksum, reload, or readings differ
-   from the expected result.
-2. Disable the candidate device before rollback; do not enable automations.
-3. Restore only the exact backed-up module path. Never use a wildcard or broad
-   recursive delete.
-4. Reload the restored file, verify `state`, `connection`, `transportState`, and
-   the preserved price/consumption readings.
-5. Restore the saved FHEM configuration only if the module-file rollback is not
-   sufficient.
+1. Am aktuellen Prüfschritt anhalten, wenn Syntax, Prüfsumme, Neuladen oder Readings vom erwarteten Ergebnis abweichen.
+2. Das Testgerät vor der Rückkehr deaktivieren und keine Automationen aktivieren.
+3. Ausschließlich den exakt gesicherten Modulpfad wiederherstellen. Niemals Platzhalter oder eine breit angelegte rekursive Löschung verwenden.
+4. Die wiederhergestellte Datei neu laden und `state`, `connection`, `transportState` sowie die erhaltenen Preis- und Verbrauchs-Readings prüfen.
+5. Die gesicherte FHEM-Konfiguration nur dann wiederherstellen, wenn die Rückkehr der Moduldatei nicht ausreicht.
 
-A rollback does not delete logs. Keep the backed-up module, its hash, and any
-failure output separately for diagnosis.
+Eine Rückkehr löscht keine Protokolle. Das gesicherte Modul, seine Prüfsumme und etwaige Fehlerausgaben für die Diagnose getrennt aufbewahren.
 
-TibberLive is independent: it may be disabled or removed while TibberConnect
-continues to provide REST data. Removing TibberLive must not delete the protected
-TibberConnect token.
+TibberLive ist unabhängig: Es kann deaktiviert oder entfernt werden, während TibberConnect weiterhin REST-Daten bereitstellt. Beim Entfernen von TibberLive darf das geschützte TibberConnect-Token nicht gelöscht werden.
 
-If the optional forecast chart was configured, remove `forecastLogFile` and the
-user-created `FileLog_TibberForecast`/`SVG_TibberForecast` definitions first.
-Only then remove the separately chosen forecast file. This does not alter an
-existing normal TibberConnect FileLog, DbLog, readings history, or token.
+Falls das optionale Prognosediagramm eingerichtet wurde, zuerst `forecastLogFile` und die selbst erstellten Definitionen `FileLog_TibberForecast`/`SVG_TibberForecast` entfernen. Erst danach die separat gewählte Prognosedatei löschen. Ein vorhandenes normales TibberConnect-FileLog, DbLog, der Reading-Verlauf und das Token bleiben davon unberührt.

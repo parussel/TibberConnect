@@ -1,20 +1,20 @@
-# Security policy
+# Sicherheitsrichtlinie
 
-## Supported development state
+## Unterstützter Entwicklungsstand
 
-This repository is a public release candidate under active development. It is
-not an official FHEM module and has no supported stable release yet.
+Dieses Repository ist ein öffentlicher Release Candidate in aktiver Entwicklung.
+Es ist kein offizielles FHEM-Modul und besitzt noch keine unterstützte stabile Version.
 
-## Reporting
+## Meldung von Sicherheitsproblemen
 
-Report suspected vulnerabilities privately to the repository owner. Do not open a public issue containing an access token, home identifier, address, meter identifier, UUID, configuration export or production log.
+Mögliche Sicherheitslücken bitte vertraulich an den Eigentümer des Repositorys melden. Keine öffentlichen Issues mit Zugriffstoken, Home-ID, Adresse, Zählerkennung, UUID, Konfigurationsexport oder Produktivprotokoll eröffnen.
 
-## Secret-handling rules
+## Regeln zum Umgang mit Geheimnissen
 
-- Never commit personal Tibber access tokens, OAuth secrets or copied FHEM configuration/state.
-- Use only synthetic identifiers and data in tests, examples and documentation.
-- Mask authorization material and identifiers in diagnostics before they reach FHEM readings or logs.
-- Revoke a token immediately if it is accidentally disclosed.
-- Release verification must scan tracked files and the generated package for secret-shaped content.
+- Persönliche Tibber-Zugriffstoken, OAuth-Geheimnisse oder kopierte FHEM-Konfigurationen und -Zustände niemals einchecken.
+- In Tests, Beispielen und Dokumentationen ausschließlich künstliche Kennungen und Daten verwenden.
+- Autorisierungsdaten und Kennungen in Diagnosen maskieren, bevor sie in FHEM-Readings oder Protokolle gelangen.
+- Ein versehentlich offengelegtes Token sofort widerrufen.
+- Die Release-Prüfung muss versionierte Dateien und das erzeugte Paket auf Inhalte untersuchen, die wie Zugangsdaten aussehen.
 
-The protected FHEM key-value store is the intended token location for the finished module. Legacy plaintext definitions receive an explicit migration path; the module must not silently rewrite user configuration.
+Der geschützte FHEM-Schlüssel-Wert-Speicher ist der vorgesehene Ablageort für das Token des fertigen Moduls. Für ältere Klartextdefinitionen gibt es einen ausdrücklichen Migrationsweg; das Modul darf die Benutzerkonfiguration nicht unbemerkt umschreiben.

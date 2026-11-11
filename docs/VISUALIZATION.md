@@ -1,4 +1,4 @@
-# Visualization / Visualisierung
+# Visualisierung
 
 ## Deutsch
 
@@ -54,42 +54,11 @@ bereits, verwende beim bewussten Aktualisieren `defmod` oder gib einen anderen
 Namen. Vor Änderungen an einer produktiven FHEM-Konfiguration gilt weiterhin:
 Sicherung anlegen und die Konfiguration selbst kontrolliert speichern.
 
-## English
-
-The package uses standard FHEM facilities: FileLog, SVG, and optionally
-`weblink`. It requires neither SQLite nor DbLog. The update channel installs
-the supplied files from `www/gplot` automatically. Create the two FileLogs from
-`examples/tibber-filelog.cfg`, and then add the definitions from
-`examples/tibber-dashboard.cfg`.
-
-The example room provides a compact local-reading overview, a daily price plot,
-and a daily live-power plot. It is display-only: it performs no switching and
-sends no data. Use the Week, Month, and Year gplot names for longer price
-views. Existing devices should be deliberately updated with `defmod` or given
-a different name; create a backup before changing a production configuration.
-
-`TibberConnect_PriceForecast.gplot` is an additional opt-in future-only price
-view. It uses a separately, atomically refreshed source file and never changes
-existing FileLog/DbLog history. The update channel installs the GPlot file;
-then review and enter `examples/tibber-forecast.cfg` one line at a time with a
-local log path.
-`forecastLogFile` is the explicit switch. `priceForecastFrom` and
-`priceForecastUntil` restrict the SVG range to the actual future cache horizon,
-including 92/96/100 quarter-hour DST days. To undo it, deliberately remove the
-attribute and optional FileLog/SVG definitions, then delete the separate file.
-
-## Existing 99_myUtils.pm / Bestehende 99_myUtils.pm
-
-If an installation already uses `define Tibber_Overview weblink htmlCode
-{TibberOverview()}`, keep that working definition. Replace only the
-`TibberOverview` subroutine in the existing `99_myUtils.pm` with the tested
-snippet in `examples/99_myUtils_TibberOverview.pm`; do not replace unrelated
-personal helper functions. The snippet uses larger, brighter text while keeping
-the German price signal, price forecast, trend, and Pulse connection status.
+## Bestehende 99_myUtils.pm
 
 Bei einer bestehenden Definition `define Tibber_Overview weblink htmlCode
 {TibberOverview()}` bleibt diese Definition erhalten. Ersetze nur die Funktion
 `TibberOverview` in der vorhandenen `99_myUtils.pm` durch das getestete Snippet
-aus `examples/99_myUtils_TibberOverview.pm`; andere persoenliche Hilfsfunktionen
-bleiben unveraendert. Das Snippet macht die Ansicht lesbarer und behaelt
+aus `examples/99_myUtils_TibberOverview.pm`; andere persönliche Hilfsfunktionen
+bleiben unverändert. Das Snippet macht die Ansicht lesbarer und behält
 Preisampel, Preisvorschau, Tendenz und Pulse-Status bei.

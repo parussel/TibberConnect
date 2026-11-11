@@ -1,6 +1,4 @@
-# FHEM update channel / FHEM-Updatequelle
-
-## Deutsch
+# FHEM-Updatequelle
 
 Die Updatequelle aktualisiert ausschließlich Dateien, die ohne Überschreiben
 persönlicher Konfigurationen sicher automatisiert werden können:
@@ -55,26 +53,3 @@ update delete https://raw.githubusercontent.com/parussel/TibberConnect/main/cont
 Für einen Rückweg zu einer vorherigen Modulversion gilt die dokumentierte
 Dateisicherung aus [ROLLBACK.md](ROLLBACK.md); ein Updatekanal ist kein Ersatz
 für ein Backup.
-
-## English
-
-The update source intentionally updates only the two module files and the six
-supplied GPlot files. It never overwrites tokens, Home IDs, device definitions,
-FHEM configuration, logs, SVG devices, or personal `99_myUtils.pm` helpers.
-
-Add, review and apply updates separately:
-
-```text
-update add https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
-update check https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
-update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
-```
-
-Restart FHEM afterwards. To stop future updates without removing files:
-
-```text
-update delete https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt
-```
-
-Always inspect the preview and keep a local backup. See [ROLLBACK.md](ROLLBACK.md)
-for the manual return path.

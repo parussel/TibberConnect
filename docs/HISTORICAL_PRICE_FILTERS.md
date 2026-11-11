@@ -1,30 +1,21 @@
-# Historical price-filter reconstruction
+# Rekonstruktion historischer Preisfilter
 
-## Evidence searched
+## Durchsuchte Grundlagen
 
-On 2026-10-17 the available TibberConnect source, both retained design/plan copies,
-the accessible local Codex project files, and the referenced earlier project chat
-were searched for `is_supercheap`, `next_cheapest_time`, and
-`cheapest_block_2h`. The names occur only in the approved requirement to perform
-this reconstruction. No earlier formula, unit, threshold, boundary convention, or
-missing-data rule was recoverable from the material available to this worktree.
+Am 17.10.2026 wurden der verfügbare TibberConnect-Quelltext, beide erhaltenen Entwurfs- und Planungskopien, die zugänglichen lokalen Codex-Projektdateien und der referenzierte frühere Projekt-Chat nach `is_supercheap`, `next_cheapest_time` und `cheapest_block_2h` durchsucht. Die Namen kommen nur in der freigegebenen Anforderung für diese Rekonstruktion vor. Aus dem verfügbaren Material ließen sich weder frühere Formel, Einheit, Schwelle und Grenzdefinition noch eine Regel für fehlende Daten wiederherstellen.
 
-The old names are therefore not recreated with guessed semantics.
+Die alten Namen werden daher nicht mit geratenen Bedeutungen neu erzeugt.
 
-## Explicit successors
+## Eindeutige Nachfolger
 
-| Historical name | Status | Documented successor |
+| Historischer Name | Status | Dokumentierter Nachfolger |
 | --- | --- | --- |
-| `is_supercheap` | Semantics unrecoverable | `priceIsNegative`: `1` only while the current total price is strictly below `0`; otherwise `0`. Missing current data produces `unknown`, never a guessed Boolean. |
-| `next_cheapest_time` | Semantics unrecoverable | `nextCheapestWindowStart`: start timestamp of the cheapest complete contiguous window selected with `priceWindowHours` (`1..6`, default `2`) in the cached horizon. Equal-cost ties choose the earliest start. Missing/gapped horizons produce `unknown`. |
-| `cheapest_block_2h` | Semantics unrecoverable | `cheapestWindow2hStart`, `cheapestWindow2hEnd`, and `cheapestWindow2hAverage`: earliest cheapest contiguous two-hour block. For quarter-hour data this is eight slots; it is emitted only when all eight adjacent intervals exist. |
+| `is_supercheap` | Bedeutung nicht wiederherstellbar | `priceIsNegative`: nur `1`, solange der aktuelle Gesamtpreis strikt unter `0` liegt, sonst `0`. Fehlende aktuelle Daten ergeben `unknown`, niemals einen geratenen Wahrheitswert. |
+| `next_cheapest_time` | Bedeutung nicht wiederherstellbar | `nextCheapestWindowStart`: Startzeitpunkt des günstigsten vollständigen zusammenhängenden Fensters, das mit `priceWindowHours` (`1..6`, Standard `2`) im Cache gewählt wurde. Bei gleichen Kosten gewinnt der früheste Beginn. Fehlende oder lückenhafte Horizonte ergeben `unknown`. |
+| `cheapest_block_2h` | Bedeutung nicht wiederherstellbar | `cheapestWindow2hStart`, `cheapestWindow2hEnd` und `cheapestWindow2hAverage`: frühester günstigster zusammenhängender Zweistundenblock. Bei Viertelstundendaten sind dies acht Abschnitte; ausgegeben wird er nur, wenn alle acht benachbarten Intervalle vorhanden sind. |
 
-All successor calculations use absolute epoch boundaries derived from each
-ISO-8601 offset. This makes midnight and daylight-saving transitions continuous
-without assuming that every local day contains 96 quarter-hours.
+Alle Nachfolgeberechnungen verwenden absolute Epoch-Grenzen, die aus dem jeweiligen ISO-8601-Offset abgeleitet werden. So bleiben Mitternacht und Zeitumstellungen zusammenhängend, ohne vorauszusetzen, dass jeder lokale Tag 96 Viertelstunden enthält.
 
-## Safety contract
+## Sicherheitszusage
 
-The module publishes advice only. `automationMode` is `advisory` and
-`automationDecision` records what a later automation could do. TibberConnect does
-not execute an FHEM command or control an actuator.
+Das Modul veröffentlicht ausschließlich Empfehlungen. `automationMode` ist `advisory`, und `automationDecision` hält fest, was eine spätere Automation tun könnte. TibberConnect führt keinen FHEM-Befehl aus und steuert keinen Aktor.
