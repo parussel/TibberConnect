@@ -21,4 +21,4 @@ Eine Fähigkeit der Data API wird nur behauptet, wenn sie gesondert bestätigt u
 
 Der bestätigte persönliche Tibber-Einladungslink lautet <https://invite.tibber.com/3mhcd54v>. Er ist klar von den technischen Anleitungen getrennt und für Installation oder Nutzung nicht erforderlich. Die Vorteile richten sich nach den jeweils geltenden Bedingungen des Tibber-Einladungsprogramms und sind deshalb nicht fest in dieser Dokumentation hinterlegt.
 
-Projektinformationen: [153er-netz.de – Entwicklung](https://153er-netz.de/seiten/entwicklung.html)
+Projektinformationen: [153er-netz.de – Entwicklung](https://153er-netz.de/seiten/entwicklung/fhem.html)

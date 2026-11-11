@@ -5,7 +5,7 @@
 # This is currently not an official FHEM module.
 #
 # Copyright (C) 2026 Frank Parussel.
-# Project information: https://153er-netz.de/seiten/entwicklung.html
+# Project information: https://153er-netz.de/seiten/entwicklung/fhem.html
 ##############################################################################
 
 package main;
@@ -774,7 +774,7 @@ stalled attempt is detached and retried safely. The readings
 <code>lastDisconnectAt</code> and <code>lastDisconnectReason</code> expose the
 last reconnect cause without exposing the access token.</p>
 <p>Community project information:
-<a href="https://153er-netz.de/seiten/entwicklung.html">153er-netz.de / Development</a></p>
+<a href="https://153er-netz.de/seiten/entwicklung/fhem.html">153er-netz.de / Development</a></p>
 
 =end html
 
@@ -799,7 +799,7 @@ h&auml;ngender Versuch wird sauber gel&ouml;st und erneut versucht. Die Readings
 <code>lastDisconnectAt</code> und <code>lastDisconnectReason</code> machen die
 letzte Ursache sichtbar, ohne den Zugriffstoken preiszugeben.</p>
 <p>Community-Projektinformationen:
-<a href="https://153er-netz.de/seiten/entwicklung.html">153er-netz.de / Entwicklung</a></p>
+<a href="https://153er-netz.de/seiten/entwicklung/fhem.html">153er-netz.de / Entwicklung</a></p>
 
 =end html_DE
 

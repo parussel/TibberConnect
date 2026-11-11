@@ -6,7 +6,7 @@
 # This is currently not an official FHEM module.
 #
 # Copyright (C) 2026 Frank Parussel.
-# Project information: https://153er-netz.de/seiten/entwicklung.html
+# Project information: https://153er-netz.de/seiten/entwicklung/fhem.html
 #
 # TibberConnect – Stable REST Master Version
 #
@@ -22,7 +22,7 @@
 # Define:
 # define meinTibber TibberConnect
 # set meinTibber token <TOKEN>
-# Project information: https://153er-netz.de/seiten/entwicklung.html
+# Project information: https://153er-netz.de/seiten/entwicklung/fhem.html
 #
 # Optional:
 # attr meinTibber interval 300
@@ -1866,7 +1866,7 @@ contiguous remaining price horizon: interval count, duration in minutes, end,
 and state. <code>priceTrend...</code> compares the next ten complete price
 intervals without another API request. All planning output is advisory.</p>
 <p>Community project information:
-<a href="https://153er-netz.de/seiten/entwicklung.html">153er-netz.de / Development</a></p>
+<a href="https://153er-netz.de/seiten/entwicklung/fhem.html">153er-netz.de / Development</a></p>
 
 =end html
 
@@ -1902,7 +1902,7 @@ Preisvorrat (Anzahl, Minuten, Ende und Status). Die Ausgabe ist ausschlie&szlig;
 beratend. <code>priceTrend...</code> vergleicht ohne weitere API-Abfrage die
 n&auml;chsten zehn vollst&auml;ndigen Preisintervalle.</p>
 <p>Community-Projektinformationen:
-<a href="https://153er-netz.de/seiten/entwicklung.html">153er-netz.de / Entwicklung</a></p>
+<a href="https://153er-netz.de/seiten/entwicklung/fhem.html">153er-netz.de / Entwicklung</a></p>
 
 =end html_DE
 
