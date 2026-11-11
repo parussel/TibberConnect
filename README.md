@@ -30,7 +30,7 @@ Home; Tibber erlaubt höchstens zwei gleichzeitige Live-Sockets.
 > der Verantwortung des Anwenders. Vor dem produktiven Einsatz sind Sicherung,
 > Plausibilitätsprüfung und ein getrennter Test erforderlich.
 
-Projektinformationen: [153er-netz.de – Entwicklung](https://153er-netz.de/seiten/entwicklung.html)
+Projektinformationen: [153er-netz.de – Entwicklung](https://153er-netz.de/seiten/entwicklung/fhem.html)
 
 ### Schnellstart
 
