@@ -1,7 +1,5 @@
 # Visualisierung
 
-## Deutsch
-
 Das Paket verwendet FHEM-Bordmittel: FileLog, SVG und optional `weblink`. Es
 braucht weder SQLite noch DbLog. Die fünf vorbereiteten Diagrammdateien liegen
 in `www/gplot`:
@@ -31,6 +29,21 @@ Definitionen aus `examples/tibber-dashboard.cfg` in FHEM einfügen. Die
 Beispiele erwarten daher genau die Namen `FileLog_TibberConnect` und
 `FileLog_TibberLive`.
 
+## Eigene Diagrammanpassungen vor Updates schützen
+
+Die vom Update-Kanal gelieferten GPlot-Dateien können bei einer späteren
+Aktualisierung ersetzt werden. Ändere diese Originaldateien deshalb nicht
+direkt. Kopiere eine anzupassende Datei stattdessen unter einen eigenen Namen
+mit dem Präfix `Privat_`, beispielsweise
+`Privat_TibberConnect_Prices_Day.gplot`, und wähle diese Kopie in der
+zugehörigen SVG-Definition aus. Die Originaldatei bleibt damit updatefähig,
+während persönliche Farben, Linien und Beschriftungen erhalten bleiben.
+
+In der geprüften Referenzinstallation werden die fünf normalen Preis- und
+Leistungsdiagramme aus solchen `Privat_`-Kopien erzeugt. Die ausschließlich
+zukünftige Preisvorschau verwendet weiterhin die unveränderte gelieferte Datei
+`TibberConnect_PriceForecast.gplot`.
+
 Die Beispielansicht im Raum **Tibber** enthält:
 
 - eine kompakte Übersicht mit aktuellem Preis, aktueller Leistung, günstigstem
@@ -54,11 +67,17 @@ bereits, verwende beim bewussten Aktualisieren `defmod` oder gib einen anderen
 Namen. Vor Änderungen an einer produktiven FHEM-Konfiguration gilt weiterhin:
 Sicherung anlegen und die Konfiguration selbst kontrolliert speichern.
 
-## Bestehende 99_myUtils.pm
+## Getrennte Hilfsdatei für die Übersicht
 
-Bei einer bestehenden Definition `define Tibber_Overview weblink htmlCode
-{TibberOverview()}` bleibt diese Definition erhalten. Ersetze nur die Funktion
-`TibberOverview` in der vorhandenen `99_myUtils.pm` durch das getestete Snippet
-aus `examples/99_myUtils_TibberOverview.pm`; andere persönliche Hilfsfunktionen
-bleiben unverändert. Das Snippet macht die Ansicht lesbarer und behält
-Preisampel, Preisvorschau, Tendenz und Pulse-Status bei.
+Die Referenzinstallation hält die Übersicht bewusst in der eigenen Datei
+`FHEM/99_myUtils_TibberOverview.pm`. Dadurch bleibt eine vorhandene
+`99_myUtils.pm` mit anderen persönlichen Hilfsfunktionen unangetastet. Kopiere
+die Beispieldatei `examples/99_myUtils_TibberOverview.pm` unter genau diesem
+Namen in das FHEM-Verzeichnis und lade sie anschließend kontrolliert neu.
+
+Die Definition `define Tibber_Overview weblink htmlCode {TibberOverview()}`
+verwendet danach die Funktion aus dieser getrennten Datei. Die Übersicht liest
+nur lokale Readings, überträgt keine Daten und schaltet nichts. Wer die Funktion
+bereits in einer vorhandenen `99_myUtils.pm` betreibt, kann diese funktionierende
+Einbindung beibehalten; persönliche Hilfsfunktionen dürfen dabei nicht ersetzt
+werden.

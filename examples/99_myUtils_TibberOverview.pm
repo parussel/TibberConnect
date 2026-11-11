@@ -1,13 +1,12 @@
-# Replace only the TibberOverview subroutine in an existing 99_myUtils.pm.
-# This helper reads local FHEM readings only and performs no switching.
+# Getrennte Hilfsdatei für die Tibber-Übersicht.
+# Sie liest ausschließlich lokale FHEM-Readings und führt keine Schaltung aus.
 package main;
 
 use strict;
 use warnings;
 
-# Required when this example is copied as FHEM/99_myUtils.pm.
 sub
-myUtils_Initialize($$)
+myUtils_TibberOverview_Initialize($$)
 {
   my ($hash) = @_;
 }

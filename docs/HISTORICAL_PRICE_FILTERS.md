@@ -14,7 +14,10 @@ Die alten Namen werden daher nicht mit geratenen Bedeutungen neu erzeugt.
 | `next_cheapest_time` | Bedeutung nicht wiederherstellbar | `nextCheapestWindowStart`: Startzeitpunkt des günstigsten vollständigen zusammenhängenden Fensters, das mit `priceWindowHours` (`1..6`, Standard `2`) im Cache gewählt wurde. Bei gleichen Kosten gewinnt der früheste Beginn. Fehlende oder lückenhafte Horizonte ergeben `unknown`. |
 | `cheapest_block_2h` | Bedeutung nicht wiederherstellbar | `cheapestWindow2hStart`, `cheapestWindow2hEnd` und `cheapestWindow2hAverage`: frühester günstigster zusammenhängender Zweistundenblock. Bei Viertelstundendaten sind dies acht Abschnitte; ausgegeben wird er nur, wenn alle acht benachbarten Intervalle vorhanden sind. |
 
-Alle Nachfolgeberechnungen verwenden absolute Epoch-Grenzen, die aus dem jeweiligen ISO-8601-Offset abgeleitet werden. So bleiben Mitternacht und Zeitumstellungen zusammenhängend, ohne vorauszusetzen, dass jeder lokale Tag 96 Viertelstunden enthält.
+Alle Nachfolgeberechnungen verwenden eindeutige Unix-Zeitstempel, die aus dem
+jeweiligen ISO-8601-Offset abgeleitet werden. So bleiben Mitternacht und
+Zeitumstellungen zusammenhängend, ohne vorauszusetzen, dass jeder lokale Tag
+96 Viertelstunden enthält.
 
 ## Sicherheitszusage
 

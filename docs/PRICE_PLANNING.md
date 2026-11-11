@@ -51,7 +51,9 @@ an einer Zeitumstellung hat ein Tag zudem nicht immer 96 Viertelstunden.
 `priceForecastData` enthält als einzelnes, kompaktes JSON-Reading die noch
 zusammenhängenden Preise. Jedes Intervall enthält `startsAt`, `endsAt`,
 `startEpoch`, `endEpoch`, `total`, `energy`, `tax`, `currency` und `level`.
-Die Epoch-Zeiten machen die wiederholte Stunde einer Zeitumstellung eindeutig.
+Die Unix-Zeitstempel machen die wiederholte Stunde einer Zeitumstellung
+eindeutig. Die technischen JSON-Feldnamen `startEpoch` und `endEpoch` bleiben
+aus Kompatibilitätsgründen unverändert.
 Das Reading wird absichtlich ohne Event geschrieben: Es entstehen weder
 hunderte dauerhafte Einzelreadings noch zusätzliche Einträge in vorhandenen
 FileLog-/DbLog-Historien.

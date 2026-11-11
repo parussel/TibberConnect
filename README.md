@@ -109,8 +109,9 @@ bekannten Preisintervalle.
 
 Für maschinelle Nutzung liefern `get TibberConnect pricesToday`,
 `pricesTomorrow`, `forecast` und
-`priceAt <ISO-8601-mit-Offset|Unix-Epoch>` kurze Bedienermeldungen. Mit `json`
-kommen lokale Cache-Daten mit ISO- und Epoch-Gültigkeitsgrenzen hinzu. Ein
+`priceAt <ISO-8601-mit-Offset|Unix-Zeitstempel>` kurze Bedienermeldungen. Mit
+`json` kommen lokale Cache-Daten mit Gültigkeitsgrenzen als ISO-Zeitangabe und
+Unix-Zeitstempel hinzu. Ein
 kompaktes `priceForecastData`-Reading vermeidet eine große Menge einzelner
 Readings. Die optionale getrennte FileLog-/GPlot-Quelle für künftige Preise ist
 in [PRICE_PLANNING.md](docs/PRICE_PLANNING.md) und
@@ -120,6 +121,10 @@ normale Historie.
 Diagramme liegen unter `www/gplot`, sichere Logging-Beispiele unter `examples`.
 Der [Visualisierungsleitfaden](docs/VISUALIZATION.md) enthält ein
 Standard-FHEM-Dashboard-Beispiel ohne SQLite oder DbLog.
+Eigene Anpassungen an Diagrammen sollten unter einem Namen mit dem Präfix
+`Privat_` gespeichert und von den SVG-Geräten verwendet werden. Dadurch bleiben
+die über den Update-Kanal gelieferten Originaldateien aktualisierbar, ohne die
+persönlichen Diagramme zu überschreiben.
 
 ### Freiwilliger Tibber-Einladungslink
 
