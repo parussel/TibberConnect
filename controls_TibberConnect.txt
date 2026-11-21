@@ -5,5 +5,5 @@ UPD 2026-10-17_00:00:00 225 www/gplot/TibberConnect_Prices_Week.gplot
 UPD 2026-10-17_00:00:00 406 www/gplot/TibberConnect_Prices_Month.gplot
 UPD 2026-10-17_00:00:00 404 www/gplot/TibberConnect_Prices_Year.gplot
 UPD 2026-10-17_00:00:00 256 www/gplot/TibberConnect_PriceForecast.gplot
-UPD 2026-11-21_00:00:00 467 www/gplot/TibberConnect_PriceComparison.gplot
+UPD 2026-11-21_00:00:00 473 www/gplot/TibberConnect_PriceComparison.gplot
 UPD 2026-10-17_00:00:00 199 www/gplot/TibberLive_Power.gplot

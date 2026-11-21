@@ -1,7 +1,7 @@
 # Range: fixed published forecast horizon plus one hour on both sides
 # Aggregation: quarter-hour
 set terminal png transparent size <SIZE> crop
-set title 'Tibber price - forecast / actual'
+set title 'Tibber Preis - Prognose / tatsächlich'
 set ylabel 'EUR/kWh'
 set y2tics
 set grid
