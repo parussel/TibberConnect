@@ -22,6 +22,12 @@ Home; Tibber erlaubt höchstens zwei gleichzeitige Live-Sockets.
 > hängenden WebSocket-Handshake auf 45 Sekunden und dokumentiert die letzte
 > Trennung über `lastDisconnectAt` und `lastDisconnectReason`.
 
+> **Aktueller Stand 2.1.0 (21.11.2026):** TibberConnect erzeugt zusätzlich
+> zur unveränderten rollierenden Prognosedatei einen stabilen
+> Prognose-Snapshot. Damit lassen sich die ursprünglich veröffentlichte
+> Preisprognose und die später tatsächlich abgerechneten Preise im selben
+> Zeitfenster vergleichen. TibberLive bleibt unverändert.
+
 > **Sicherheit und Eigenverantwortung:** TibberConnect und TibberLive werden
 > ohne Gewähr bereitgestellt. Die Nutzung der Module, ihrer Readings,
 > Preisprognosen und Beispiele erfolgt ausschließlich auf eigene Verantwortung.

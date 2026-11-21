@@ -22,7 +22,23 @@ innerhalb der Perl-Expression absichtlich `;;`. Das ist die FHEM-Escapesequenz
 für ein Semikolon in einer gespeicherten CFG und darf nicht zu `;` gekürzt
 werden.
 
-Die sechs GPlot-Dateien werden über den Update-Kanal automatisch in das
+Für den direkten Vergleich steht außerdem
+`TibberConnect_PriceComparison.gplot` bereit. Es zeichnet den stabilen
+Prognose-Snapshot und den tatsächlichen Preis gemeinsam. Die zugehörige
+FileLog- und SVG-Definition steht vollständig in
+`examples/tibber-forecast.cfg`. Der feste Anzeigebereich reicht eine Stunde
+vor `priceForecastSnapshotFrom` bis eine Stunde nach
+`priceForecastSnapshotUntil`. So bleibt der komplette veröffentlichte
+Viertelstundenhorizont sichtbar, während sich die reale Preislinie nach und
+nach ergänzt.
+
+Die Snapshot-Datei liegt neben der mit `forecastLogFile` konfigurierten Datei;
+aus `TibberConnect_forecast.log` wird beispielsweise
+`TibberConnect_forecast_snapshot.log`. Sie wird vom Modul als fester aktueller
+Snapshot verwaltet und benötigt deshalb keine tägliche Dateinamensmaske und
+kein `nrarchive`. Vorhandene Prognoseplots bleiben davon unabhängig.
+
+Die sieben GPlot-Dateien werden über den Update-Kanal automatisch in das
 FHEM-Verzeichnis `www/gplot` installiert. Richte anschließend die beiden
 FileLogs aus `examples/tibber-filelog.cfg` ein. Erst danach die
 Definitionen aus `examples/tibber-dashboard.cfg` in FHEM einfügen. Die
@@ -42,7 +58,8 @@ während persönliche Farben, Linien und Beschriftungen erhalten bleiben.
 In der geprüften Referenzinstallation werden die fünf normalen Preis- und
 Leistungsdiagramme aus solchen `Privat_`-Kopien erzeugt. Die ausschließlich
 zukünftige Preisvorschau verwendet weiterhin die unveränderte gelieferte Datei
-`TibberConnect_PriceForecast.gplot`.
+`TibberConnect_PriceForecast.gplot`. Der Soll-Ist-Vergleich verwendet
+`TibberConnect_PriceComparison.gplot` ebenfalls unverändert.
 
 Die Beispielansicht im Raum **Tibber** enthält:
 

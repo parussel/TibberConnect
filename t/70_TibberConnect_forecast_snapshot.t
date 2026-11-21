@@ -155,4 +155,33 @@ subtest 'module help and supplied plot explain snapshot comparison' => sub {
         'comparison GPlot is supplied');
 };
 
+subtest 'GitHub documentation and update channel publish the tested addition' => sub {
+    my %files;
+    for my $path (qw(
+        README.md
+        docs/PRICE_PLANNING.md
+        docs/VISUALIZATION.md
+        CHANGELOG.md
+        CHANGED
+        controls_TibberConnect.txt
+    )) {
+        open my $fh, '<', $path or die $!;
+        $files{$path} = do { local $/; <$fh> };
+        close $fh;
+    }
+    like($files{'README.md'}, qr/21\.11\.2026.*Prognose-Snapshot/s,
+        'README announces the dated snapshot addition');
+    like($files{'docs/PRICE_PLANNING.md'}, qr/priceForecastSnapshotFrom/,
+        'price planning documents snapshot readings');
+    like($files{'docs/VISUALIZATION.md'}, qr/TibberConnect_PriceComparison/,
+        'visualization documents the comparison plot');
+    like($files{'CHANGELOG.md'}, qr/2\.1\.0.*2026-11-21/s,
+        'changelog contains the new release section');
+    like($files{'CHANGED'}, qr/^2026-11-21 TibberConnect 2\.1\.0/m,
+        'FHEM change file contains the dated update');
+    like($files{'controls_TibberConnect.txt'},
+        qr{www/gplot/TibberConnect_PriceComparison\.gplot},
+        'update channel delivers the new GPlot');
+};
+
 done_testing();

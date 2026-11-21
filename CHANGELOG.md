@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## 2.1.0 — 2026-11-21
+
+- TibberConnect erzeugt optional neben der unveränderten rollierenden Prognosedatei einen atomar aktualisierten Prognose-Snapshot für den zeitgleichen Vergleich mit tatsächlichen Preisen.
+- Neue `priceForecastSnapshot...`-Readings zeigen Zeitraum, Intervallzahl, Aktualisierung und Dateistatus; vorhandene Metadaten werden nach einem Neustart wieder eingelesen.
+- `TibberConnect_PriceComparison.gplot` und das erweiterte Konfigurationsbeispiel stellen Prognose und tatsächlichen Preis gemeinsam mit einer Stunde Randabstand dar.
+- TibberLive und alle bisherigen Prognosewerte bleiben unverändert.
+
 ## 2.0.1 — 2026-10-25
 
 - Eine Wiederherstellungslücke in TibberLive wurde behoben: Ein WebSocket-Handshake ohne Rückmeldung wird nun durch einen unabhängigen 45-Sekunden-Zeitablauf begrenzt und wechselt in den vorhandenen kontrollierten Neuverbindungsablauf.

@@ -78,6 +78,28 @@ werden keine Werte erfunden. `priceAt` meldet `state=not_found`, wenn der
 Zeitpunkt au&szlig;erhalb des Caches liegt. Die optionale getrennte Prognosedatei
 und das GPlot-Beispiel stehen in [VISUALIZATION.md](VISUALIZATION.md).
 
+### Stabiler Prognose-Snapshot für den Soll-Ist-Vergleich
+
+Ist `forecastLogFile` gesetzt, bleibt die bisherige rollierende Prognosedatei
+unverändert. TibberConnect erzeugt daneben automatisch eine zweite Datei mit
+dem Suffix `_snapshot`. Der Pfad wird aus `forecastLogFile` abgeleitet und ist
+deshalb weder auf ein bestimmtes FHEM-Verzeichnis noch auf einen absoluten
+Pfad festgelegt. Der Snapshot wird atomar erst dann ersetzt, wenn Tibber einen
+späteren Prognosehorizont bereitstellt. Ein fortschreitender aktueller
+Zeitpunkt verkürzt ihn nicht.
+
+Diese Readings beschreiben den gespeicherten Snapshot:
+
+- `priceForecastSnapshotFrom` und `priceForecastSnapshotUntil`;
+- `priceForecastSnapshotIntervals`;
+- `priceForecastSnapshotUpdated`;
+- `priceForecastSnapshotState`;
+- `priceForecastSnapshotFileStatus`.
+
+Nach einem FHEM-Neustart liest das Modul die Metadaten aus der vorhandenen
+Datei wieder ein. Schreibfehler werden im Dateistatus sichtbar, ohne die
+normale Preisabfrage oder die bisherige Prognosedatei zu unterbrechen.
+
 ### Preisentwicklung der nächsten Werte
 
 `priceTrend...` bewertet ohne zusätzliche API-Abfrage die zehn nächsten
