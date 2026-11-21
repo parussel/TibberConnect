@@ -1,0 +1,13 @@
+# Range: fixed published forecast horizon plus one hour on both sides
+# Aggregation: quarter-hour
+set terminal png transparent size <SIZE> crop
+set title 'Tibber price - forecast / actual'
+set ylabel 'EUR/kWh'
+set y2tics
+set grid
+
+#FileLog_TibberForecastSnapshot 4:price
+#FileLog_TibberConnect 4:current_price
+
+plot '<IN>' using 1:2 axes x1y1 title 'Prognose' ls l0 lw 1 with steps,\
+     '<IN>' using 1:2 axes x1y1 title 'Tatsächlicher Preis' ls l3 lw 2 with lines

@@ -1098,6 +1098,22 @@ sub TibberConnect_ForecastLogDeviceName {
     return $name . "_Forecast";
 }
 
+sub TibberConnect_ForecastSnapshotPath {
+    my ($path) = @_;
+    return undef if !defined $path || $path eq "";
+    return undef if $path =~ /\0/;
+    return $1 . "_snapshot" . $2
+      if $path =~ /^(.*)(\.[^\\\/.]+)$/;
+    return $path . "_snapshot";
+}
+
+sub TibberConnect_ForecastSnapshotLogDeviceName {
+    my ($hash) = @_;
+    my $name = ref($hash) eq "HASH" ? ($hash->{NAME} || "TibberConnect") : "TibberConnect";
+    $name =~ s/[^A-Za-z0-9_.-]/_/g;
+    return $name . "_ForecastSnapshot";
+}
+
 sub TibberConnect_ForecastFileTimestamp {
     my ($starts_at) = @_;
     return undef if !defined $starts_at;
@@ -1130,6 +1146,146 @@ sub TibberConnect_WriteForecastFile {
     rename $temporary, $path
       or do { unlink $temporary; return "cannot replace forecastLogFile: $!"; };
     return undef;
+}
+
+sub TibberConnect_ReadForecastSnapshotMetadata {
+    my ($path) = @_;
+    return { state => "missing" }
+      if !defined $path || $path eq "" || !-e $path;
+    open my $fh, "<", $path
+      or return { state => "error", error => "cannot read forecast snapshot: $!" };
+
+    my ($first_start, $last_end, $previous_end, $intervals);
+    $intervals = 0;
+    while (my $line = <$fh>) {
+        next if $line =~ /^\s*$/;
+        if ($line !~ /^\S+\s+\S+\s+price:\s+\S+\s+startEpoch:\s+(\d+)\s+endEpoch:\s+(\d+)\s*$/) {
+            close $fh;
+            return { state => "invalid", error => "invalid forecast snapshot row" };
+        }
+        my ($start, $end) = (int($1), int($2));
+        if ($end <= $start || (defined $previous_end && $start != $previous_end)) {
+            close $fh;
+            return { state => "invalid", error => "non-contiguous forecast snapshot" };
+        }
+        $first_start = $start if !defined $first_start;
+        $last_end = $end;
+        $previous_end = $end;
+        $intervals++;
+    }
+    close $fh
+      or return { state => "error", error => "cannot close forecast snapshot: $!" };
+    return { state => "invalid", error => "empty forecast snapshot" }
+      if !$intervals;
+    my $modified = (stat $path)[9];
+    return {
+        state      => "ready",
+        startEpoch => $first_start,
+        endEpoch   => $last_end,
+        intervals  => $intervals,
+        modified   => $modified,
+    };
+}
+
+sub TibberConnect_WriteForecastSnapshotFile {
+    my ($hash, $forecast, $path) = @_;
+    return "invalid forecast snapshot input"
+      if ref($hash) ne "HASH" || ref($forecast) ne "HASH";
+    return "forecast snapshot path is disabled"
+      if !defined $path || $path eq "";
+    return "forecast snapshot path contains an unsupported NUL character"
+      if $path =~ /\0/;
+
+    my $temporary = $path . ".tmp." . $$;
+    open my $fh, ">", $temporary
+      or return "cannot write forecast snapshot: $!";
+    my $device = TibberConnect_ForecastSnapshotLogDeviceName($hash);
+    for my $item (@{$forecast->{intervals} || []}) {
+        my $stamp = TibberConnect_ForecastFileTimestamp($item->{startsAt});
+        next if !defined $stamp;
+        print {$fh} "$stamp $device price: $item->{total} startEpoch: $item->{startEpoch} endEpoch: $item->{endEpoch}\n"
+          or do { close $fh; unlink $temporary; return "cannot write forecast snapshot: $!"; };
+    }
+    close $fh
+      or do { unlink $temporary; return "cannot close forecast snapshot: $!"; };
+    rename $temporary, $path
+      or do { unlink $temporary; return "cannot replace forecast snapshot: $!"; };
+    return undef;
+}
+
+sub TibberConnect_UpdateForecastSnapshot {
+    my ($hash, $forecast, $now, $forecast_path_override) = @_;
+    my $forecast_path = defined $forecast_path_override
+      ? $forecast_path_override
+      : ref($hash) eq "HASH" ? AttrVal($hash->{NAME}, "forecastLogFile", "") : "";
+    return { state => "disabled", fileStatus => "disabled", intervals => 0 }
+      if !defined $forecast_path || $forecast_path eq "";
+    return { state => "error", fileStatus => "error:forecastLogFile contains an unsupported NUL character", intervals => 0 }
+      if $forecast_path =~ /\0/;
+    my $path = TibberConnect_ForecastSnapshotPath($forecast_path);
+    return { state => "error", fileStatus => "error:cannot derive forecast snapshot path", intervals => 0 }
+      if !defined $path;
+
+    my $stored = TibberConnect_ReadForecastSnapshotMetadata($path);
+    if (ref($forecast) ne "HASH" || $forecast->{state} ne "ready"
+        || ref($forecast->{intervals}) ne "ARRAY" || !@{$forecast->{intervals}}) {
+        return {
+            %{$stored},
+            state      => $stored->{state} eq "ready" ? "unchanged" : "empty",
+            fileStatus => $stored->{state} eq "ready" ? "ready" : "empty",
+            path       => $path,
+        };
+    }
+
+    my $replace = $stored->{state} ne "ready"
+      || !defined $stored->{endEpoch}
+      || $forecast->{endEpoch} > $stored->{endEpoch};
+    if ($replace) {
+        my $previous_state = $stored->{state};
+        my $error = TibberConnect_WriteForecastSnapshotFile($hash, $forecast, $path);
+        return {
+            %{$stored},
+            state      => "error",
+            fileStatus => "error:$error",
+            path       => $path,
+        } if defined $error;
+        $stored = TibberConnect_ReadForecastSnapshotMetadata($path);
+        return {
+            %{$stored},
+            state      => "error",
+            fileStatus => "error:" . ($stored->{error} || "cannot verify forecast snapshot"),
+            path       => $path,
+        } if $stored->{state} ne "ready";
+        $stored->{state} = $previous_state eq "missing" ? "created"
+          : $previous_state eq "ready" ? "updated" : "repaired";
+    }
+    else {
+        $stored->{state} = "unchanged";
+    }
+    $stored->{fileStatus} = "ready";
+    $stored->{path} = $path;
+    return $stored;
+}
+
+sub TibberConnect_PublishForecastSnapshotReadings {
+    my ($hash, $snapshot, $forecast) = @_;
+    return if ref($hash) ne "HASH" || ref($snapshot) ne "HASH";
+    my $ready = defined $snapshot->{startEpoch} && defined $snapshot->{endEpoch};
+    my $offset_source = ref($forecast) eq "HASH" ? $forecast->{startsAt} : undef;
+    my $updated = $ready && defined $snapshot->{modified}
+      ? TibberConnect_FormatIsoEpochWithOffset($snapshot->{modified}, $offset_source)
+      : "unknown";
+    readingsSingleUpdate($hash, "priceForecastSnapshotFrom",
+        $ready ? TibberConnect_FormatIsoEpochWithOffset($snapshot->{startEpoch}, $offset_source) : "unknown", 0);
+    readingsSingleUpdate($hash, "priceForecastSnapshotUntil",
+        $ready ? TibberConnect_FormatIsoEpochWithOffset($snapshot->{endEpoch}, $offset_source) : "unknown", 0);
+    readingsSingleUpdate($hash, "priceForecastSnapshotIntervals",
+        $ready ? $snapshot->{intervals} : 0, 0);
+    readingsSingleUpdate($hash, "priceForecastSnapshotUpdated", $updated, 0);
+    readingsSingleUpdate($hash, "priceForecastSnapshotState",
+        $snapshot->{state} || "unknown", 0);
+    readingsSingleUpdate($hash, "priceForecastSnapshotFileStatus",
+        $snapshot->{fileStatus} || "unknown", 0);
 }
 
 sub TibberConnect_PriceTrend {
@@ -1271,6 +1427,11 @@ sub TibberConnect_PublishPriceInsights {
     readingsBulkUpdate($hash, "automationDecision",
         $next ? "would_run:$next->{startsAt}" : "no_complete_window");
     readingsEndUpdate($hash, 1);
+
+    my $snapshot = TibberConnect_UpdateForecastSnapshot(
+        $hash, $forecast_export, $now);
+    TibberConnect_PublishForecastSnapshotReadings(
+        $hash, $snapshot, $forecast_export);
 
     return if !$forecast_changed;
 
@@ -1794,6 +1955,11 @@ sub TibberConnect_Attr {
 
         if ($command eq 'del') {
             readingsSingleUpdate($hash, 'priceForecastFileStatus', 'disabled', 0);
+            TibberConnect_PublishForecastSnapshotReadings(
+                $hash,
+                { state => 'disabled', fileStatus => 'disabled', intervals => 0 },
+                undef
+            );
             return undef;
         }
 
@@ -1803,6 +1969,10 @@ sub TibberConnect_Attr {
         readingsSingleUpdate($hash, 'priceForecastFileStatus',
             defined $error ? "error:$error"
             : $forecast->{state} eq 'ready' ? 'ready' : 'empty', 0);
+        my $snapshot = TibberConnect_UpdateForecastSnapshot(
+            $hash, $forecast, time(), $value);
+        TibberConnect_PublishForecastSnapshotReadings(
+            $hash, $snapshot, $forecast);
         return undef;
     }
 
@@ -1851,11 +2021,21 @@ receive compact machine data, for example <code>get TibberConnect forecast json<
 <code>priceForecastData</code> is the same future forecast as one silent reading,
 with ISO and epoch start/end bounds for each interval. It neither causes another
 API request nor creates one reading per price interval.</p>
-<p>Optional <code>attr &lt;device&gt; forecastLogFile &lt;absolute path&gt;</code>
-creates a separate generated FHEM FileLog-compatible forecast source. It never
-modifies configured operational FileLog/DbLog histories. See the supplied
-<code>examples/tibber-forecast.cfg</code> for a deliberately user-operated SVG
-setup and rollback.</p>
+<p>Optional <code>attr &lt;device&gt; forecastLogFile &lt;path&gt;</code> creates a
+separate generated FHEM FileLog-compatible forecast source. It never modifies
+configured operational FileLog/DbLog histories. TibberConnect additionally
+derives a fixed snapshot path in the same directory by inserting
+<code>_snapshot</code> before the extension: for example
+<code>TibberConnect_forecast.log</code> becomes
+<code>TibberConnect_forecast_snapshot.log</code>. No global or hard-coded log
+directory is used; absolute and relative paths keep the meaning they have in
+the local FHEM installation. The snapshot is atomically replaced only when a
+later complete price horizon becomes known, so a real price can be drawn into
+the original forecast window after publication. The
+<code>priceForecastSnapshot...</code> readings expose its bounds, interval
+count, update time, state, and file status. See the supplied
+<code>examples/tibber-forecast.cfg</code> and
+<code>TibberConnect_PriceComparison.gplot</code> for the FileLog/SVG setup.</p>
 <p><code>attr TibberConnect priceWindowHours &lt;1..6&gt;</code> selects the exact
 contiguous duration for <code>nextCheapestWindowStart</code>,
 <code>nextCheapestWindowEnd</code>, and <code>nextCheapestWindowAverage</code>.
@@ -1886,11 +2066,23 @@ liefern kurze Statusmeldungen allein aus dem lokalen Cache. Der Zusatz
 <code>priceForecastData</code> enth&auml;lt dieselbe Zukunftsprognose mit ISO- und
 Epoch-Grenzen je Intervall. Es verursacht weder eine weitere API-Abfrage noch
 ein Reading je Preisintervall.</p>
-<p>Optional erzeugt <code>attr &lt;Geraet&gt; forecastLogFile &lt;absoluter Pfad&gt;</code>
+<p>Optional erzeugt <code>attr &lt;Geraet&gt; forecastLogFile &lt;Pfad&gt;</code>
 eine getrennte, FileLog-kompatible Prognosequelle. Konfigurierte operative
-FileLog-/DbLog-Historien bleiben unver&auml;ndert. Die mitgelieferte
-<code>examples/tibber-forecast.cfg</code> zeigt eine bewusst benutzergef&uuml;hrte
-SVG-Einrichtung und den R&uuml;ckweg.</p>
+FileLog-/DbLog-Historien bleiben unver&auml;ndert. TibberConnect leitet daraus
+zus&auml;tzlich einen festen Prognose-Snapshot im selben Verzeichnis ab, indem
+<code>_snapshot</code> vor der Dateiendung eingef&uuml;gt wird:
+<code>TibberConnect_forecast.log</code> wird beispielsweise zu
+<code>TibberConnect_forecast_snapshot.log</code>. Es gibt kein fest codiertes
+oder global vorausgesetztes Logverzeichnis; absolute und relative Pfade
+behalten die Bedeutung der jeweiligen FHEM-Installation. Der Snapshot wird nur
+bei einem neu bekannten, sp&auml;ter endenden Preisfenster atomar ersetzt. So kann
+der tats&auml;chliche Preis nach der Ver&ouml;ffentlichung in dasselbe feste
+Prognosefenster hineinlaufen. Die Readings
+<code>priceForecastSnapshot...</code> zeigen Grenzen, Intervallanzahl,
+Aktualisierungszeit, Zustand und Dateistatus. Die mitgelieferten Dateien
+<code>examples/tibber-forecast.cfg</code> und
+<code>TibberConnect_PriceComparison.gplot</code> zeigen die vollst&auml;ndige
+FileLog-/SVG-Einrichtung.</p>
 <p><code>attr TibberConnect priceWindowHours &lt;1..6&gt;</code> w&auml;hlt die exakte,
 zusammenh&auml;ngende Dauer f&uuml;r <code>nextCheapestWindowStart</code>,
 <code>nextCheapestWindowEnd</code> und <code>nextCheapestWindowAverage</code>.
