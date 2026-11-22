@@ -757,22 +757,62 @@ sub TibberLive_Undef {
 =begin html
 
 <a id="TibberLive"></a><h3>TibberLive</h3>
-<p>Define: <code>define TibberLive TibberLive TibberConnect</code>. One instance
-is pinned to one verified home. Commands are <code>selectHome</code>,
-<code>batteryAgeMonths 0..12</code>, and <code>batteryReplaced</code>. Live
-health and battery maintenance are readings only; no notification or actuator is
-triggered.</p>
-<p>The optional <code>AnyEvent::WebSocket::Client</code> dependency is detected
-but never installed by the module. If it is missing, only TibberLive remains
-disabled and displays dependency guidance as readings. On Debian/Raspberry Pi OS,
-after checking package availability, an administrator can use
-<code>sudo apt install libanyevent-websocket-client-perl</code>, if that package
-is available for the installed distribution. A usable <code>EV</code> module is
-also required.</p>
-<p>Version 2.0.1 adds a 45-second upper bound for each WebSocket handshake. A
-stalled attempt is detached and retried safely. The readings
-<code>lastDisconnectAt</code> and <code>lastDisconnectReason</code> expose the
-last reconnect cause without exposing the access token.</p>
+<h4>Overview</h4>
+<p>TibberLive is the optional Pulse/Watty live module. It uses the token, home
+information and dynamic WebSocket URL supplied by one existing TibberConnect
+device. One TibberLive instance belongs to one verified home. Tibber allows at
+most two simultaneous live sockets. The module publishes measurements and
+health information but never sends notifications or switches actuators.</p>
+
+<h4>Definition</h4>
+<p><code>define &lt;name&gt; TibberLive &lt;TibberConnect-device&gt;</code><br>
+The referenced TibberConnect device must already exist. If only one verified
+home is available it is selected automatically; otherwise use
+<code>selectHome</code>. TibberLive does not store a separate access token.</p>
+
+<h4>Set commands</h4>
+<ul>
+<li><code>selectHome &lt;homeId&gt;</code> &ndash; selects a home known and verified by TibberConnect and reconnects.</li>
+<li><code>batteryAgeMonths 0..12</code> &ndash; records the current Pulse battery age as the initial maintenance baseline.</li>
+<li><code>batteryReplaced</code> &ndash; records a battery replacement at the current time.</li>
+</ul>
+
+<h4>Attributes</h4>
+<ul>
+<li><code>disable 0|1</code> &ndash; closes or enables the live connection.</li>
+<li><code>homeId</code> &ndash; selected home; normally maintained by <code>selectHome</code>.</li>
+<li><code>batteryLifetimeDays</code> &ndash; expected battery life used for the maintenance due date.</li>
+<li><code>batteryInstalledEpoch</code> &ndash; stored installation time of the battery.</li>
+<li><code>liveEventMode essential|all</code> &ndash; <code>essential</code> emits regular events for power/timestamp and only changed events for other live fields; <code>all</code> emits every received value.</li>
+</ul>
+
+<h4>Important readings</h4>
+<ul>
+<li><code>state</code>, <code>connection</code>, <code>liveStatus</code>, <code>liveWarning</code> &ndash; connection and health state.</li>
+<li><code>power</code>, <code>powerProduction</code>, <code>minPower</code>, <code>averagePower</code>, <code>maxPower</code> &ndash; live power values.</li>
+<li><code>accumulatedConsumption</code>, <code>accumulatedProduction</code>, <code>lastMeterConsumption</code>, <code>lastMeterProduction</code> &ndash; live energy/meter values when supplied by Tibber.</li>
+<li><code>voltagePhase1..3</code>, <code>currentL1..3</code>, <code>powerFactor</code>, <code>signalStrength</code> &ndash; electrical and radio values when available.</li>
+<li><code>lastLiveUpdate</code>, <code>liveFrameAge</code>, <code>expectedFrameCadence</code>, <code>liveMissingFields</code> &ndash; data freshness and completeness.</li>
+<li><code>lastDisconnectAt</code>, <code>lastDisconnectReason</code>, <code>lastError</code> &ndash; reconnect diagnostics without exposing the token.</li>
+<li><code>batterySetup</code>, <code>batteryAgeMonths</code>, <code>batteryInstalledAt</code>, <code>batteryReplacementDue</code>, <code>batteryMaintenance</code>, <code>batteryRecommendation</code> &ndash; battery maintenance.</li>
+</ul>
+
+<h4>Dependencies and reconnect behaviour</h4>
+<p><code>AnyEvent::WebSocket::Client</code> and a usable <code>EV</code> module
+are required. They are detected but never installed automatically. If missing,
+only TibberLive remains disabled; <code>dependencyStatus</code>,
+<code>dependencyRecommendation</code> and <code>dependencyInstallCommand</code>
+explain the condition. On Debian/Raspberry Pi OS an administrator may use
+<code>sudo apt install libanyevent-websocket-client-perl</code> after verifying
+package availability. Each WebSocket handshake is limited to 45 seconds. A
+stalled attempt is detached and retried with controlled backoff. Protocol
+silence and a changed Tibber WebSocket URL also trigger a controlled reconnect;
+authentication errors are not retried indefinitely with the same token.</p>
+
+<h4>Notes</h4>
+<p>Live fields depend on the meter, Pulse/Watty hardware and Tibber service.
+Missing optional fields are listed in <code>liveMissingFields</code>. Battery
+maintenance is advisory only.</p>
 <p>Community project information:
 <a href="https://153er-netz.de/seiten/entwicklung/fhem.html">153er-netz.de / Development</a></p>
 
@@ -781,23 +821,67 @@ last reconnect cause without exposing the access token.</p>
 =begin html_DE
 
 <a id="TibberLive-DE"></a><h3>TibberLive</h3>
-<p>Definition: <code>define TibberLive TibberLive TibberConnect</code>. Eine
-Instanz bleibt genau einem gepr&uuml;ften Home zugeordnet. Befehle:
-<code>selectHome</code>, <code>batteryAgeMonths 0..12</code> und
-<code>batteryReplaced</code>. Status und Batteriepflege sind nur Readings; das
-Modul versendet keine Nachricht und schaltet keinen Aktor.</p>
-<p>Die optionale Abh&auml;ngigkeit
-<code>AnyEvent::WebSocket::Client</code> wird erkannt, aber niemals vom Modul
-installiert. Fehlt sie, bleibt nur TibberLive deaktiviert und zeigt Hinweise als
-Readings. Unter Debian/Raspberry Pi OS kann der Administrator nach Pr&uuml;fung der
+<h4>&Uuml;bersicht</h4>
+<p>TibberLive ist das optionale Pulse-/Watty-Livemodul. Es verwendet Token,
+Home-Informationen und dynamische WebSocket-Adresse eines vorhandenen
+TibberConnect-Ger&auml;ts. Eine TibberLive-Instanz geh&ouml;rt zu genau einem
+gepr&uuml;ften Home. Tibber erlaubt h&ouml;chstens zwei gleichzeitige Live-Sockets.
+Das Modul ver&ouml;ffentlicht Mess- und Zustandswerte, versendet aber keine
+Nachrichten und schaltet keinen Aktor.</p>
+
+<h4>Definition</h4>
+<p><code>define &lt;Name&gt; TibberLive &lt;TibberConnect-Geraet&gt;</code><br>
+Das referenzierte TibberConnect-Ger&auml;t muss bereits vorhanden sein. Bei nur
+einem gepr&uuml;ften Home erfolgt die Auswahl automatisch, andernfalls mit
+<code>selectHome</code>. TibberLive speichert keinen eigenen Zugriffstoken.</p>
+
+<h4>Set-Befehle</h4>
+<ul>
+<li><code>selectHome &lt;homeId&gt;</code> &ndash; w&auml;hlt ein TibberConnect bekanntes und gepr&uuml;ftes Home und verbindet neu.</li>
+<li><code>batteryAgeMonths 0..12</code> &ndash; erfasst das aktuelle Alter der Pulse-Batterie als Ausgangspunkt der Wartung.</li>
+<li><code>batteryReplaced</code> &ndash; protokolliert einen Batteriewechsel zum aktuellen Zeitpunkt.</li>
+</ul>
+
+<h4>Attribute</h4>
+<ul>
+<li><code>disable 0|1</code> &ndash; schlie&szlig;t oder aktiviert die Live-Verbindung.</li>
+<li><code>homeId</code> &ndash; ausgew&auml;hltes Home; normalerweise durch <code>selectHome</code> gepflegt.</li>
+<li><code>batteryLifetimeDays</code> &ndash; erwartete Batterielebensdauer f&uuml;r den Wartungstermin.</li>
+<li><code>batteryInstalledEpoch</code> &ndash; gespeicherter Einbauzeitpunkt der Batterie.</li>
+<li><code>liveEventMode essential|all</code> &ndash; <code>essential</code> erzeugt regelm&auml;&szlig;ige Events f&uuml;r Leistung/Zeitstempel und f&uuml;r andere Livefelder nur bei &Auml;nderung; <code>all</code> erzeugt jedes empfangene Event.</li>
+</ul>
+
+<h4>Wichtige Readings</h4>
+<ul>
+<li><code>state</code>, <code>connection</code>, <code>liveStatus</code>, <code>liveWarning</code> &ndash; Verbindung und Gesundheitszustand.</li>
+<li><code>power</code>, <code>powerProduction</code>, <code>minPower</code>, <code>averagePower</code>, <code>maxPower</code> &ndash; Live-Leistungswerte.</li>
+<li><code>accumulatedConsumption</code>, <code>accumulatedProduction</code>, <code>lastMeterConsumption</code>, <code>lastMeterProduction</code> &ndash; Live-Energie-/Z&auml;hlerwerte, soweit Tibber sie liefert.</li>
+<li><code>voltagePhase1..3</code>, <code>currentL1..3</code>, <code>powerFactor</code>, <code>signalStrength</code> &ndash; elektrische und Funkwerte, soweit vorhanden.</li>
+<li><code>lastLiveUpdate</code>, <code>liveFrameAge</code>, <code>expectedFrameCadence</code>, <code>liveMissingFields</code> &ndash; Aktualit&auml;t und Vollst&auml;ndigkeit.</li>
+<li><code>lastDisconnectAt</code>, <code>lastDisconnectReason</code>, <code>lastError</code> &ndash; Wiederverbindungsdiagnose ohne Preisgabe des Tokens.</li>
+<li><code>batterySetup</code>, <code>batteryAgeMonths</code>, <code>batteryInstalledAt</code>, <code>batteryReplacementDue</code>, <code>batteryMaintenance</code>, <code>batteryRecommendation</code> &ndash; Batteriepflege.</li>
+</ul>
+
+<h4>Abh&auml;ngigkeiten und Wiederverbindung</h4>
+<p><code>AnyEvent::WebSocket::Client</code> und ein nutzbares <code>EV</code>-Modul
+sind erforderlich. Sie werden erkannt, aber niemals automatisch installiert.
+Fehlen sie, bleibt nur TibberLive deaktiviert; die Readings
+<code>dependencyStatus</code>, <code>dependencyRecommendation</code> und
+<code>dependencyInstallCommand</code> erkl&auml;ren den Zustand. Unter
+Debian/Raspberry Pi OS kann ein Administrator nach Pr&uuml;fung der
 Paketverf&uuml;gbarkeit
-<code>sudo apt install libanyevent-websocket-client-perl</code> verwenden, sofern
-das Paket f&uuml;r die installierte Distribution verf&uuml;gbar ist. Au&szlig;erdem muss das
-Modul <code>EV</code> nutzbar sein.</p>
-<p>Version 2.0.1 begrenzt jeden WebSocket-Handshake auf 45 Sekunden. Ein
-h&auml;ngender Versuch wird sauber gel&ouml;st und erneut versucht. Die Readings
-<code>lastDisconnectAt</code> und <code>lastDisconnectReason</code> machen die
-letzte Ursache sichtbar, ohne den Zugriffstoken preiszugeben.</p>
+<code>sudo apt install libanyevent-websocket-client-perl</code> verwenden. Jeder
+WebSocket-Handshake ist auf 45 Sekunden begrenzt. Ein h&auml;ngender Versuch wird
+sauber gel&ouml;st und mit kontrollierter Wartezeit wiederholt. Auch Protokollstille
+oder eine ge&auml;nderte Tibber-WebSocket-Adresse l&ouml;sen eine kontrollierte
+Wiederverbindung aus; Authentifizierungsfehler werden mit demselben Token nicht
+endlos wiederholt.</p>
+
+<h4>Hinweise</h4>
+<p>Die vorhandenen Livefelder h&auml;ngen von Z&auml;hler, Pulse-/Watty-Hardware und
+Tibber-Dienst ab. Fehlende optionale Felder stehen in
+<code>liveMissingFields</code>. Die Batteriepflege ist ausschlie&szlig;lich
+beratend.</p>
 <p>Community-Projektinformationen:
 <a href="https://153er-netz.de/seiten/entwicklung/fhem.html">153er-netz.de / Entwicklung</a></p>
 

@@ -26,7 +26,9 @@ Home; Tibber erlaubt höchstens zwei gleichzeitige Live-Sockets.
 > zur unveränderten rollierenden Prognosedatei einen stabilen
 > Prognose-Snapshot. Damit lassen sich die ursprünglich veröffentlichte
 > Preisprognose und die später tatsächlich abgerechneten Preise im selben
-> Zeitfenster vergleichen. TibberLive bleibt unverändert.
+> Zeitfenster vergleichen. Prognose und tatsächlicher Preis können dadurch
+> parallel in derselben Plot-Datei dargestellt werden. TibberLive bleibt
+> unverändert.
 
 > **Sicherheit und Eigenverantwortung:** TibberConnect und TibberLive werden
 > ohne Gewähr bereitgestellt. Die Nutzung der Module, ihrer Readings,

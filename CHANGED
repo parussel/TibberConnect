@@ -1,3 +1,7 @@
+2026-11-22 TibberConnect / TibberLive Dokumentation
+- Strukturiert und vervollständigt die deutsch- und englischsprachige Modulhilfe.
+- Stellt ausdrücklich klar, dass Prognose und tatsächlicher Preis parallel in derselben Plot-Datei angezeigt werden können.
+
 2026-11-21 TibberConnect 2.1.0
 - Ergänzt einen stabilen Prognose-Snapshot und ein GPlot-Beispiel für den Vergleich mit den tatsächlichen Preisen.
 - Leitet den Snapshot-Pfad aus forecastLogFile ab und lässt bisherige Prognosewerte sowie TibberLive unverändert.

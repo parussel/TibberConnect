@@ -2009,42 +2009,78 @@ sub TibberConnect_Undef {
 =begin html
 
 <a id="TibberConnect"></a><h3>TibberConnect</h3>
-<p>Define: <code>define TibberConnect TibberConnect</code>, then store the secret
-with <code>set TibberConnect token &lt;TOKEN&gt;</code>. Use
-<code>refreshHomes</code>, <code>selectHome</code>, and <code>update</code>.
-The module caches quarter-hour prices and retrieves delayed consumption
-separately. The token is not part of the definition.</p>
-<p><code>get &lt;device&gt; pricesToday</code>, <code>pricesTomorrow</code>,
-<code>forecast</code> and <code>priceAt &lt;ISO-8601-with-offset|Unix-epoch&gt;</code>
-return concise operator messages from the local cache. Add <code>json</code> to
-receive compact machine data, for example <code>get TibberConnect forecast json</code>.
-<code>priceForecastData</code> is the same future forecast as one silent reading,
-with ISO and epoch start/end bounds for each interval. It neither causes another
-API request nor creates one reading per price interval.</p>
-<p>Optional <code>attr &lt;device&gt; forecastLogFile &lt;path&gt;</code> creates a
-separate generated FHEM FileLog-compatible forecast source. It never modifies
-configured operational FileLog/DbLog histories. TibberConnect additionally
-derives a fixed snapshot path in the same directory by inserting
-<code>_snapshot</code> before the extension: for example
-<code>TibberConnect_forecast.log</code> becomes
-<code>TibberConnect_forecast_snapshot.log</code>. No global or hard-coded log
-directory is used; absolute and relative paths keep the meaning they have in
-the local FHEM installation. The snapshot is atomically replaced only when a
-later complete price horizon becomes known, so a real price can be drawn into
-the original forecast window after publication. The
-<code>priceForecastSnapshot...</code> readings expose its bounds, interval
-count, update time, state, and file status. See the supplied
-<code>examples/tibber-forecast.cfg</code> and
-<code>TibberConnect_PriceComparison.gplot</code> for the FileLog/SVG setup.</p>
-<p><code>attr TibberConnect priceWindowHours &lt;1..6&gt;</code> selects the exact
-contiguous duration for <code>nextCheapestWindowStart</code>,
-<code>nextCheapestWindowEnd</code>, and <code>nextCheapestWindowAverage</code>.
-The default is two hours. Fixed <code>cheapestWindow2h...</code> readings remain
-compatible. <code>todayPrice...</code> and <code>tomorrowPrice...</code> expose
-separate calendar-day statistics. <code>priceForecast...</code> exposes the
-contiguous remaining price horizon: interval count, duration in minutes, end,
-and state. <code>priceTrend...</code> compares the next ten complete price
-intervals without another API request. All planning output is advisory.</p>
+<h4>Overview</h4>
+<p>TibberConnect is the account and REST module. It loads homes, quarter-hour
+prices and delayed consumption/cost data, keeps a local price cache and derives
+advisory price windows. TibberLive is the separate optional module for Pulse
+live measurements. TibberConnect never switches an actuator.</p>
+
+<h4>Definition</h4>
+<p><code>define &lt;name&gt; TibberConnect</code><br>
+Then store the access token in FHEM's protected key/value storage with
+<code>set &lt;name&gt; token &lt;TOKEN&gt;</code>. The token is not part of the
+definition. A legacy token in the definition is copied to protected storage;
+remove the plaintext token with <code>modify &lt;name&gt; TibberConnect</code>
+and save the configuration.</p>
+
+<h4>Set commands</h4>
+<ul>
+<li><code>token &lt;TOKEN&gt;</code> &ndash; securely stores/replaces the token and starts the connection.</li>
+<li><code>deleteToken</code> &ndash; deletes the stored token and disconnects the module.</li>
+<li><code>refreshHomes</code> &ndash; reloads the available homes.</li>
+<li><code>selectHome &lt;homeId&gt;</code> &ndash; selects a verified home and refreshes prices and consumption.</li>
+<li><code>update</code> &ndash; immediately refreshes prices and delayed consumption data.</li>
+</ul>
+
+<h4>Get commands</h4>
+<ul>
+<li><code>homes</code> &ndash; returns the available home IDs.</li>
+<li><code>pricesToday [json]</code> and <code>pricesTomorrow [json]</code> &ndash; calendar-day prices from the cache.</li>
+<li><code>forecast [json]</code> &ndash; remaining future price horizon.</li>
+<li><code>priceAt &lt;ISO-8601-with-offset|Unix-epoch&gt; [json]</code> &ndash; price for one instant.</li>
+</ul>
+<p>Without <code>json</code> the commands return concise operator text; with it
+they return compact machine-readable data. They use the cache and do not cause
+an additional API request.</p>
+
+<h4>Attributes</h4>
+<ul>
+<li><code>interval</code> &ndash; regular price update interval in seconds.</li>
+<li><code>staleTime</code> &ndash; age in seconds after which data is marked stale.</li>
+<li><code>disable 0|1</code> &ndash; disables or enables polling.</li>
+<li><code>homeId</code> &ndash; selected Tibber home; normally maintained by <code>selectHome</code>.</li>
+<li><code>priceWindowHours 1..6</code> &ndash; duration of the next cheapest contiguous window; default: two hours.</li>
+<li><code>forecastLogFile &lt;path&gt;</code> &ndash; optional generated FileLog-compatible forecast source.</li>
+</ul>
+
+<h4>Important readings</h4>
+<ul>
+<li><code>state</code>, <code>connection</code>, <code>lastUpdate</code>, <code>lastError</code> &ndash; operating state and diagnostics.</li>
+<li><code>availableHomes</code>, <code>selectedHome</code>, <code>nickname</code>, <code>city</code>, <code>country</code> &ndash; home selection.</li>
+<li><code>current_price</code>, <code>priceEnergy</code>, <code>priceTax</code>, <code>priceStartsAt</code>, <code>currency</code>, <code>priceLevel</code> &ndash; current price.</li>
+<li><code>todayPrice...</code>, <code>tomorrowPrice...</code>, <code>priceMinimum</code>, <code>priceMaximum</code>, <code>priceAverage</code> &ndash; price statistics.</li>
+<li><code>nextCheapestWindow...</code>, <code>negativePrice...</code>, <code>priceTrend...</code>, <code>automationDecision</code> &ndash; advisory planning output.</li>
+<li><code>dailyConsumption</code>, <code>dailyCost</code>, <code>consumptionState</code>, <code>consumptionUpdatedAt</code> &ndash; delayed consumption data.</li>
+<li><code>priceForecastData</code> &ndash; silent JSON forecast reading including ISO and epoch bounds for every interval.</li>
+</ul>
+
+<h4>Forecast files and comparison plot</h4>
+<p><code>forecastLogFile</code> creates a separate generated forecast source and
+never changes existing FileLog/DbLog histories. Absolute and relative paths
+retain their normal meaning in the local FHEM installation. From that path the
+module derives a second path by inserting <code>_snapshot</code> before the file
+extension. The forecast snapshot is replaced atomically only when a later
+complete horizon becomes available. This stable source lets the actual price
+grow into the original forecast period and displays the forecast snapshot and
+actual price in the same plot. Readings beginning with
+<code>priceForecastSnapshot</code> show bounds, interval count, update time,
+state and file status. See <code>examples/tibber-forecast.cfg</code> and
+<code>TibberConnect_PriceComparison.gplot</code> for the complete FileLog/SVG
+configuration.</p>
+
+<h4>Notes</h4>
+<p>Tibber API data can be delayed or incomplete. All forecasts, trends and
+price windows are advisory. Secure and test any automation outside this module.</p>
 <p>Community project information:
 <a href="https://153er-netz.de/seiten/entwicklung/fhem.html">153er-netz.de / Development</a></p>
 
@@ -2053,46 +2089,83 @@ intervals without another API request. All planning output is advisory.</p>
 =begin html_DE
 
 <a id="TibberConnect-DE"></a><h3>TibberConnect</h3>
-<p>Definition: <code>define TibberConnect TibberConnect</code>. Danach das
-Geheimnis mit <code>set TibberConnect token &lt;TOKEN&gt;</code> gesch&uuml;tzt
-speichern. Verf&uuml;gbar sind <code>refreshHomes</code>,
-<code>selectHome</code> und <code>update</code>. Viertelstundenpreise werden
-gepuffert; verz&ouml;gerte Verbrauchsdaten werden getrennt abgerufen.</p>
-<p><code>get &lt;Geraet&gt; pricesToday</code>, <code>pricesTomorrow</code>,
-<code>forecast</code> und <code>priceAt &lt;ISO-8601-mit-Offset|Unix-epoch&gt;</code>
-liefern kurze Statusmeldungen allein aus dem lokalen Cache. Der Zusatz
-<code>json</code> liefert die kompakten Maschinendaten, etwa mit
-<code>get TibberConnect forecast json</code>. Das einzelne stille Reading
-<code>priceForecastData</code> enth&auml;lt dieselbe Zukunftsprognose mit ISO- und
-Epoch-Grenzen je Intervall. Es verursacht weder eine weitere API-Abfrage noch
-ein Reading je Preisintervall.</p>
-<p>Optional erzeugt <code>attr &lt;Geraet&gt; forecastLogFile &lt;Pfad&gt;</code>
-eine getrennte, FileLog-kompatible Prognosequelle. Konfigurierte operative
-FileLog-/DbLog-Historien bleiben unver&auml;ndert. TibberConnect leitet daraus
-zus&auml;tzlich einen festen Prognose-Snapshot im selben Verzeichnis ab, indem
-<code>_snapshot</code> vor der Dateiendung eingef&uuml;gt wird:
-<code>TibberConnect_forecast.log</code> wird beispielsweise zu
-<code>TibberConnect_forecast_snapshot.log</code>. Es gibt kein fest codiertes
-oder global vorausgesetztes Logverzeichnis; absolute und relative Pfade
-behalten die Bedeutung der jeweiligen FHEM-Installation. Der Snapshot wird nur
-bei einem neu bekannten, sp&auml;ter endenden Preisfenster atomar ersetzt. So kann
-der tats&auml;chliche Preis nach der Ver&ouml;ffentlichung in dasselbe feste
-Prognosefenster hineinlaufen. Die Readings
-<code>priceForecastSnapshot...</code> zeigen Grenzen, Intervallanzahl,
-Aktualisierungszeit, Zustand und Dateistatus. Die mitgelieferten Dateien
+<h4>&Uuml;bersicht</h4>
+<p>TibberConnect ist das Konto- und REST-Modul. Es liest Homes,
+Viertelstundenpreise sowie verz&ouml;gerte Verbrauchs- und Kostendaten, h&auml;lt
+einen lokalen Preis-Cache und berechnet beratende Preisfenster. TibberLive ist
+das getrennte optionale Modul f&uuml;r Pulse-Livewerte. TibberConnect schaltet
+selbst keinen Aktor.</p>
+
+<h4>Definition</h4>
+<p><code>define &lt;Name&gt; TibberConnect</code><br>
+Danach den Zugriffstoken mit <code>set &lt;Name&gt; token &lt;TOKEN&gt;</code> im
+gesch&uuml;tzten FHEM-Schl&uuml;ssel-Wert-Speicher ablegen. Der Token geh&ouml;rt
+nicht in die Definition. Ein alter Token in der Definition wird in den
+gesch&uuml;tzten Speicher kopiert; anschlie&szlig;end den Klartext mit
+<code>modify &lt;Name&gt; TibberConnect</code> entfernen und speichern.</p>
+
+<h4>Set-Befehle</h4>
+<ul>
+<li><code>token &lt;TOKEN&gt;</code> &ndash; speichert/ersetzt den Token gesch&uuml;tzt und startet die Verbindung.</li>
+<li><code>deleteToken</code> &ndash; l&ouml;scht den gespeicherten Token und trennt das Modul.</li>
+<li><code>refreshHomes</code> &ndash; liest die verf&uuml;gbaren Homes neu ein.</li>
+<li><code>selectHome &lt;homeId&gt;</code> &ndash; w&auml;hlt ein gepr&uuml;ftes Home und aktualisiert Preise und Verbrauch.</li>
+<li><code>update</code> &ndash; startet sofort die Aktualisierung von Preisen und verz&ouml;gerten Verbrauchsdaten.</li>
+</ul>
+
+<h4>Get-Befehle</h4>
+<ul>
+<li><code>homes</code> &ndash; liefert die verf&uuml;gbaren Home-IDs.</li>
+<li><code>pricesToday [json]</code> und <code>pricesTomorrow [json]</code> &ndash; Preise des Kalendertags aus dem Cache.</li>
+<li><code>forecast [json]</code> &ndash; verbleibender zuk&uuml;nftiger Preiszeitraum.</li>
+<li><code>priceAt &lt;ISO-8601-mit-Offset|Unix-Epoch&gt; [json]</code> &ndash; Preis zu einem Zeitpunkt.</li>
+</ul>
+<p>Ohne <code>json</code> erscheint ein kurzer Bedientext, mit <code>json</code>
+eine kompakte maschinenlesbare Ausgabe. Die Daten stammen aus dem Cache und
+verursachen keine zus&auml;tzliche API-Abfrage.</p>
+
+<h4>Attribute</h4>
+<ul>
+<li><code>interval</code> &ndash; regul&auml;rer Preis-Aktualisierungsabstand in Sekunden.</li>
+<li><code>staleTime</code> &ndash; Alter in Sekunden, ab dem Daten als veraltet gelten.</li>
+<li><code>disable 0|1</code> &ndash; deaktiviert oder aktiviert die Abfragen.</li>
+<li><code>homeId</code> &ndash; ausgew&auml;hltes Tibber-Home; normalerweise durch <code>selectHome</code> gepflegt.</li>
+<li><code>priceWindowHours 1..6</code> &ndash; Dauer des n&auml;chsten g&uuml;nstigsten zusammenh&auml;ngenden Fensters; Standard: zwei Stunden.</li>
+<li><code>forecastLogFile &lt;Pfad&gt;</code> &ndash; optionale erzeugte FileLog-kompatible Prognosequelle.</li>
+</ul>
+
+<h4>Wichtige Readings</h4>
+<ul>
+<li><code>state</code>, <code>connection</code>, <code>lastUpdate</code>, <code>lastError</code> &ndash; Betriebszustand und Diagnose.</li>
+<li><code>availableHomes</code>, <code>selectedHome</code>, <code>nickname</code>, <code>city</code>, <code>country</code> &ndash; Home-Auswahl.</li>
+<li><code>current_price</code>, <code>priceEnergy</code>, <code>priceTax</code>, <code>priceStartsAt</code>, <code>currency</code>, <code>priceLevel</code> &ndash; aktueller Preis.</li>
+<li><code>todayPrice...</code>, <code>tomorrowPrice...</code>, <code>priceMinimum</code>, <code>priceMaximum</code>, <code>priceAverage</code> &ndash; Preisstatistik.</li>
+<li><code>nextCheapestWindow...</code>, <code>negativePrice...</code>, <code>priceTrend...</code>, <code>automationDecision</code> &ndash; beratende Planung.</li>
+<li><code>dailyConsumption</code>, <code>dailyCost</code>, <code>consumptionState</code>, <code>consumptionUpdatedAt</code> &ndash; verz&ouml;gerte Verbrauchsdaten.</li>
+<li><code>priceForecastData</code> &ndash; stilles JSON-Prognose-Reading mit ISO- und Epoch-Grenzen je Intervall.</li>
+</ul>
+
+<h4>Prognosedateien und Vergleichsplot</h4>
+<p><code>forecastLogFile</code> erzeugt eine getrennte Prognosequelle und
+ver&auml;ndert keine vorhandenen FileLog-/DbLog-Historien. Absolute und relative
+Pfade behalten ihre normale Bedeutung in der jeweiligen FHEM-Installation.
+Aus diesem Pfad leitet das Modul durch <code>_snapshot</code> vor der Dateiendung
+eine zweite Datei ab. Der Prognose-Snapshot wird nur bei einem sp&auml;ter endenden,
+vollst&auml;ndigen Preisfenster atomar ersetzt. Dadurch kann der tats&auml;chliche Preis
+in den urspr&uuml;nglichen Prognosezeitraum hineinlaufen; Prognose-Snapshot und
+tats&auml;chlicher Preis werden in demselben Plot parallel dargestellt. Die
+Beispielkonfiguration verbindet damit den Prognose-Snapshot mit dem
+tats&auml;chlichen Preis in demselben Plot. Die
+Readings <code>priceForecastSnapshot...</code> zeigen Grenzen, Intervallanzahl,
+Aktualisierungszeit, Zustand und Dateistatus. Die Dateien
 <code>examples/tibber-forecast.cfg</code> und
-<code>TibberConnect_PriceComparison.gplot</code> zeigen die vollst&auml;ndige
+<code>TibberConnect_PriceComparison.gplot</code> enthalten die vollst&auml;ndige
 FileLog-/SVG-Einrichtung.</p>
-<p><code>attr TibberConnect priceWindowHours &lt;1..6&gt;</code> w&auml;hlt die exakte,
-zusammenh&auml;ngende Dauer f&uuml;r <code>nextCheapestWindowStart</code>,
-<code>nextCheapestWindowEnd</code> und <code>nextCheapestWindowAverage</code>.
-Ohne Attribut gelten zwei Stunden. Feste <code>cheapestWindow2h...</code>-Readings
-bleiben kompatibel. <code>todayPrice...</code> und
-<code>tomorrowPrice...</code> liefern getrennte Tagesstatistiken. Die Ausgabe
-<code>priceForecast...</code> zeigt den zusammenh&auml;ngenden verbliebenen
-Preisvorrat (Anzahl, Minuten, Ende und Status). Die Ausgabe ist ausschlie&szlig;lich
-beratend. <code>priceTrend...</code> vergleicht ohne weitere API-Abfrage die
-n&auml;chsten zehn vollst&auml;ndigen Preisintervalle.</p>
+
+<h4>Hinweise</h4>
+<p>Tibber-API-Daten k&ouml;nnen verz&ouml;gert oder unvollst&auml;ndig sein. Prognosen,
+Trends und Preisfenster sind ausschlie&szlig;lich beratend. Jede au&szlig;erhalb des
+Moduls erstellte Automation muss separat abgesichert und getestet werden.</p>
 <p>Community-Projektinformationen:
 <a href="https://153er-netz.de/seiten/entwicklung/fhem.html">153er-netz.de / Entwicklung</a></p>
 

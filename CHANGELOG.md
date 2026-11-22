@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## Dokumentation – 2026-11-22
+
+- Die deutsch- und englischsprachigen Hilfebereiche von TibberConnect und TibberLive wurden vollständig gegliedert und um Definitionen, Befehle, Attribute, wichtige Readings sowie Diagnosehinweise ergänzt.
+- Der aktuelle Hinweis stellt ausdrücklich klar, dass Prognose und tatsächlicher Preis parallel in derselben Plot-Datei angezeigt werden können.
+- Die Programmlogik blieb unverändert.
+
 ## 2.1.0 — 2026-11-21
 
 - TibberConnect erzeugt optional neben der unveränderten rollierenden Prognosedatei einen atomar aktualisierten Prognose-Snapshot für den zeitgleichen Vergleich mit tatsächlichen Preisen.
