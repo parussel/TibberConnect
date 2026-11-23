@@ -110,10 +110,10 @@ nach den Einrichtungstests einen Austausch. Nach einem Batterietausch folgt
 Erhaltene Readings sind unter anderem `current_price`, `price.current`,
 `dailyConsumption` und `dailyCost`. Eindeutige Nachfolge-Readings sind
 `priceIsNegative`, `nextCheapestWindowStart` und `cheapestWindow2hStart`.
-Nicht wiederherstellbare historische Formeln sind in
-[docs/HISTORICAL_PRICE_FILTERS.md](docs/HISTORICAL_PRICE_FILTERS.md)
-dokumentiert. Alle Automationsausgaben sind beratend; dieses Paket schaltet
-keinen Aktor.
+Die früheren Namen `is_supercheap`, `next_cheapest_time` und
+`cheapest_block_2h` werden nicht angeboten, da ihre ursprünglichen
+Berechnungen nicht verlässlich rekonstruierbar sind. Alle
+Automationsausgaben sind beratend; dieses Paket schaltet keinen Aktor.
 
 ### Preisplanung
 

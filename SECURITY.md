@@ -15,6 +15,5 @@ Mögliche Sicherheitslücken bitte vertraulich an den Eigentümer des Repository
 - In Tests, Beispielen und Dokumentationen ausschließlich künstliche Kennungen und Daten verwenden.
 - Autorisierungsdaten und Kennungen in Diagnosen maskieren, bevor sie in FHEM-Readings oder Protokolle gelangen.
 - Ein versehentlich offengelegtes Token sofort widerrufen.
-- Die Release-Prüfung muss versionierte Dateien und das erzeugte Paket auf Inhalte untersuchen, die wie Zugangsdaten aussehen.
 
 Der geschützte FHEM-Schlüssel-Wert-Speicher ist der vorgesehene Ablageort für das Token des fertigen Moduls. Für ältere Klartextdefinitionen gibt es einen ausdrücklichen Migrationsweg; das Modul darf die Benutzerkonfiguration nicht unbemerkt umschreiben.

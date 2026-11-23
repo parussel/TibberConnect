@@ -1,9 +1,9 @@
 # Sicherung und Rückkehr zum vorherigen Stand
 
-Alle Schritte auf dem Raspberry Pi werden vom Benutzer ausgeführt. Die bekannte funktionsfähige Datei darf erst überschrieben werden, nachdem Pfad, Dateigröße, SHA-256-Prüfsumme und eine Sicherung mit Zeitstempel festgehalten wurden.
+Vor dem Ersetzen einer funktionsfähigen Datei Pfad, Dateigröße und SHA-256-Prüfsumme notieren und eine Sicherung mit Zeitstempel anlegen.
 
 1. Am aktuellen Prüfschritt anhalten, wenn Syntax, Prüfsumme, Neuladen oder Readings vom erwarteten Ergebnis abweichen.
-2. Das Testgerät vor der Rückkehr deaktivieren und keine Automationen aktivieren.
+2. Das betroffene Gerät vor der Rückkehr deaktivieren und keine Automationen aktivieren.
 3. Ausschließlich den exakt gesicherten Modulpfad wiederherstellen. Niemals Platzhalter oder eine breit angelegte rekursive Löschung verwenden.
 4. Die wiederhergestellte Datei neu laden und `state`, `connection`, `transportState` sowie die erhaltenen Preis- und Verbrauchs-Readings prüfen.
 5. Die gesicherte FHEM-Konfiguration nur dann wiederherstellen, wenn die Rückkehr der Moduldatei nicht ausreicht.
