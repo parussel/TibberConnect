@@ -81,7 +81,7 @@ update all https://raw.githubusercontent.com/parussel/TibberConnect/main/control
 shutdown restart
 ```
 
-Die beiden Module und die sechs GPlot-Dateien werden dabei automatisch geladen;
+Die beiden Module und die sieben GPlot-Dateien werden dabei automatisch geladen;
 sie dürfen nicht manuell kopiert werden. Nach dem Neustart das Konto ohne
 Klartext-Token in der Definition anlegen:
 
@@ -137,7 +137,7 @@ Für weitere Homes wird je Home eine weitere TibberLive-Instanz angelegt; insges
 höchstens zwei. Eine Instanz wechselt nicht automatisch, wenn das Standard-Home
 von TibberConnect später geändert wird.
 
-Die sechs Diagrammdateien aus `www/gplot` sind bereits über den Update-Kanal
+Die sieben Diagrammdateien aus `www/gplot` sind bereits über den Update-Kanal
 installiert. Beispiele für FileLog und DbLog liegen unter `examples/`; deren
 Definitionen müssen an lokale Gerätenamen und Pfade angepasst werden. Für die
 zusätzliche, nur zukünftige Preisprognose `examples/tibber-forecast.cfg` Zeile

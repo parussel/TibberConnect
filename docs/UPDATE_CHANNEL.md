@@ -5,7 +5,7 @@ persönlicher Konfigurationen sicher automatisiert werden können:
 
 - `FHEM/70_TibberConnect.pm`
 - `FHEM/70_TibberLive.pm`
-- die sechs mitgelieferten Dateien unter `www/gplot/`
+- die sieben mitgelieferten Dateien unter `www/gplot/`
 
 Nicht Teil des automatischen Updates sind `99_myUtils.pm`, Geräte-Definitionen,
 Token, Home-IDs, FileLogs, SVG-Geräte, persönliche Diagramme und die
@@ -27,7 +27,7 @@ update check https://raw.githubusercontent.com/parussel/TibberConnect/main/contr
 ```
 
 Erst wenn die Vorschau ausschließlich die erwarteten zwei Moduldateien und
-gegebenenfalls die sechs Tibber-GPlot-Dateien nennt:
+gegebenenfalls die sieben Tibber-GPlot-Dateien nennt:
 
 ```text
 update all https://raw.githubusercontent.com/parussel/TibberConnect/main/controls_TibberConnect.txt

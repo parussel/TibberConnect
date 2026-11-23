@@ -164,7 +164,7 @@ Offizielle API-Dokumentation: <https://developer.tibber.com/docs/>
 
 Der Schnellstart oben registriert diese Quelle dauerhaft. Sie stellt spätere
 Modul- und GPlot-Aktualisierungen aus diesem Repository bereit. Der
-Update-Kanal enthält bewusst nur die beiden Moduldateien und die sechs
+Update-Kanal enthält bewusst nur die beiden Moduldateien und die sieben
 mitgelieferten GPlot-Dateien.
 Er schreibt niemals Token, Home-ID, Gerätedefinition, FileLog, SVG-Gerät,
 FHEM-Konfiguration oder eine persönliche `99_myUtils.pm`.
