@@ -80,7 +80,21 @@ Wähle bei Bedarf ein gefundenes Home:
 set TibberConnect selectHome <HOME_ID_AUS_AVAILABLEHOMES>
 ```
 
-Für Live-Daten erst die optionalen Abhängigkeiten prüfen und dann eingeben:
+**Zusatzschritt für TibberLive:** Der FHEM-Update-Kanal installiert keine
+Perl-Pakete. Für die WebSocket-Livewerte werden
+`AnyEvent::WebSocket::Client` und `EV` benötigt. Auf dem getesteten Raspberry
+Pi 4 mit Debian 13 (`trixie`) können sie am **Raspberry-Linux-Prompt** mit
+folgendem Paket installiert werden:
+
+```text
+sudo apt install libanyevent-websocket-client-perl
+```
+
+Auf dem Raspberry Pi 3 mit Raspbian 9 (`stretch`) ist ein anderer
+Installationsweg nötig; den Debian-13-Befehl dort nicht ungeprüft übernehmen.
+Weitere Voraussetzungen und Prüfhilfen stehen in der
+[Installationsanleitung](docs/INSTALL.md). Erst nach der Installation der
+Abhängigkeiten TibberLive in **FHEM** definieren:
 
 ```text
 define TibberLive TibberLive TibberConnect
